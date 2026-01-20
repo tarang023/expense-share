@@ -1,0 +1,13 @@
+package com.expense.demo.repository;
+
+import com.expense.demo.model.ExpenseSplit;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+import java.util.List;
+
+@Repository
+public interface ExpenseSplitRepository extends JpaRepository<ExpenseSplit, Long> {
+    // Used by the Service to calculate who owes what
+    List<ExpenseSplit> findByExpenseId(Long expenseId);
+
+}
