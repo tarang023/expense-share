@@ -11,13 +11,12 @@ public class EmailService {
 
     @Autowired
     private JavaMailSender javaMailSender;
-
-    // Inject your Gmail address from application.properties
+ 
     @Value("${spring.mail.username}")
     private String senderEmail;
 
     public void sendOtpEmail( String to , String otp) {
-        // --- DEBUGGING LOGS ---
+       
         System.out.println("DEBUG CHECK:");
         System.out.println("From (senderEmail): '" + senderEmail + "'");
         System.out.println("To (recipient): '" + to + "'");

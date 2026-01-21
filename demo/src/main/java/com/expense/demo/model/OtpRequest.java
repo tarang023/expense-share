@@ -1,6 +1,14 @@
  package com.expense.demo.model;
- public class OtpRequest {
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+
+@Entity
+
+public class OtpRequest {
+    @Id
     private String email;
+    private String otp;
 
     // Default constructor
     public OtpRequest() {}
@@ -12,5 +20,12 @@
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public String getOtp() {
+        return otp;
+    }
+    public void setOtp(String otp) {
+        this.otp = otp;
     }
 }

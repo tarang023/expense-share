@@ -1,38 +1,45 @@
 package com.expense.demo.service;
+import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import com.expense.demo.model.OtpRequest;
+import com.expense.demo.repository.OtpRequestRepository;
 
 @Service
 public class OtpService {
-
-    // Storage format: <Email, OTP>
-    private final ConcurrentHashMap<String, String> otpStorage = new ConcurrentHashMap<>();
+  
+    @Autowired
+    private OtpRequestRepository otpRequestRepository;
     
-    // To clean up OTPs, you would ideally store an expiry timestamp too.
     
     public String generateOtp(String email) {
-        // Generate random 6-digit number
+      
         String otp = String.valueOf(new Random().nextInt(900000) + 100000);
-        
-        // Save to storage (overwrites existing if any)
-        otpStorage.put(email, otp);
         
         return otp;
     }
 
-    public boolean validateOtp(String email, String otpInput) {
-        if (!otpStorage.containsKey(email)) {
-            return false;
-        }
-        
-        String storedOtp = otpStorage.get(email);
-        return storedOtp.equals(otpInput);
+    public void saveOtp(String email, String otp) {
+
+        OtpRequest otpEntity = new OtpRequest();
+        otpEntity.setEmail(email);  
+        otpEntity.setOtp(otp);
+       otpRequestRepository.save(otpEntity);
     }
-    
+
+    public List<OtpRequest> getAllOtpRequests() {
+         return otpRequestRepository.findAll();
+    }
+    public OtpRequest findBy(String email) {
+        return otpRequestRepository.findById(email).orElse(null);
+    }
+
     public void clearOtp(String email) {
-        otpStorage.remove(email);
+        otpRequestRepository.deleteById(email);
     }
 }

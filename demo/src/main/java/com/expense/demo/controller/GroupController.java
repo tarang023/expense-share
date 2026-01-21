@@ -20,16 +20,13 @@ public class GroupController {
         this.userRepo = userRepo;
     }
 
-    // 1. Create a Group
-    // API: POST /api/groups
-    // Body: { "name": "Manali Trip" }
+   
     @PostMapping
     public ExpenseGroup createGroup(@RequestBody ExpenseGroup group) {
         return groupRepo.save(group);
     }
 
-    // 2. Add a User to a Group
-    // API: POST /api/groups/1/add/5  (Add User ID 5 to Group ID 1)
+ 
     @PostMapping("/{groupId}/add/{userId}")
     public ExpenseGroup addMember(@PathVariable Long groupId, @PathVariable Long userId) {
         ExpenseGroup group = groupRepo.findById(groupId).orElseThrow();
@@ -39,7 +36,7 @@ public class GroupController {
         return groupRepo.save(group);
     }
 
-    // 3. Get all groups
+   
     @GetMapping
     public List<ExpenseGroup> getAllGroups() {
         return groupRepo.findAll();

@@ -17,8 +17,7 @@ public class SettlementController {
     public SettlementController(SettlementService settlementService) {
         this.settlementService = settlementService;
     }
-
-    // HIT THIS URL IN BROWSER: http://localhost:8080/api/settle
+ 
     
     @GetMapping("/settle/{groupId}")
     public List<SettlementTransaction> getSettlement(@PathVariable Long groupId) {
