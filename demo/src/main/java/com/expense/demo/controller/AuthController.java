@@ -1,5 +1,6 @@
 package com.expense.demo.controller;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -68,9 +69,13 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public String login(@RequestBody User user) {
-
-        return service.verify(user);
+    public ResponseEntity<?> login(@RequestBody User user) {
+        String token = service.verify(user);
+        
+        if ("fail".equals(token)) {
+            return ResponseEntity.status(401).body(Map.of("error", "Invalid username or password"));
+        }
+        return new ResponseEntity<>(Map.of("token", token), HttpStatus.OK);
     }
 }
 

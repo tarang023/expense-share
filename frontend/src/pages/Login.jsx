@@ -4,7 +4,7 @@ import { loginUser } from "../services/api";
 
 const Login = () => {
     const [formData, setFormData] = useState({
-        email: "",
+        username: "",
         password: ""
     });
     
@@ -37,13 +37,13 @@ const Login = () => {
                 
                 <form onSubmit={handleLogin} className="space-y-4">
                     <div>
-                        <label className="block text-gray-600 mb-1 text-sm font-medium">Email Address</label>
+                        <label className="block text-gray-600 mb-1 text-sm font-medium">Username</label>
                         <input 
-                            name="email"
-                            type="email" 
+                            name="username"
+                            type="text" 
                             className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                            placeholder="buckky@nit.edu"
-                            value={formData.email}
+                            placeholder="buckky"
+                            value={formData.username}
                             onChange={handleChange}
                             required
                         />

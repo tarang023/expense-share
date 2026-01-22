@@ -26,6 +26,10 @@ public class GroupController {
         return groupRepo.save(group);
     }
 
+    @GetMapping("/test")
+    public String test() {
+        return "Group controller is working!";
+    }
  
     @PostMapping("/{groupId}/add/{userId}")
     public ExpenseGroup addMember(@PathVariable Long groupId, @PathVariable Long userId) {
