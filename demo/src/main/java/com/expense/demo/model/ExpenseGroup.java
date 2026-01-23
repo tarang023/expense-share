@@ -2,14 +2,16 @@ package com.expense.demo.model;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;       // <--- Changed from @Data
 import lombok.NoArgsConstructor;
+import lombok.Setter;       // <--- Changed from @Data
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Data
+@Getter  // Use Getter/Setter instead of @Data to prevent toString() infinite loops
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class ExpenseGroup {
@@ -19,7 +21,7 @@ public class ExpenseGroup {
     
     private String name;  
 
-    @OneToMany(mappedBy = "group") // Bidirectional relationship to Expense
+    @OneToMany(mappedBy = "group") 
     private List<Expense> expenses;
  
     @ManyToMany

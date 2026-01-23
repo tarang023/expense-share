@@ -34,7 +34,7 @@ export const createGroup = async (groupName) => {
         
         // axios.post(URL, BODY, CONFIG)
         const response = await axios.post(
-            `${API_URL}/groups`, 
+            `${API_URL}/groups/createGroup`, 
             { name: groupName }, // This is the Body
             {
                 headers: {
@@ -94,82 +94,110 @@ export const addMemberToGroup = async (groupId, usernameToAdd) => {
 };
 
 export const loginUser = async (userData) => {
- 
-    const response = await fetch('http://localhost:8000/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(userData),
-    });
+    // Axios automatically stringifies the body and sets Content-Type to application/json
+    const response = await axios.post('http://localhost:8000/api/auth/login', userData);
 
     console.log("Login response status:", response);
 
-    if (!response.ok) {
-        throw new Error('Login failed');
-    }
+    // Axios throws an error automatically for non-2xx responses, 
+    // so manual !response.ok checks are removed to rely on Axios's native error handling.
 
-    //save cookie to localstorate
-    const data = await response.json();
+    const data = response.data;
     console.log("Login response received:", data);
     console.log("Response status:", data.token);
-    console.log("reson",response.token);
-    console.log("status",response.ok);
+    console.log("reson", response.token); // Note: response.token is likely undefined in both Fetch and Axios (it is usually in data)
+    console.log("status", response.statusText); // 'ok' is not a property in Axios response, used statusText or status instead
+    
     const token = data.token;
     localStorage.setItem("jwt_token", token);
- 
+
     return data;
 };
 
  
 export const sendOtp = async (data) => {
-     
-    console.log("new Sending OTP to:", data); 
+    console.log("new Sending OTP to:", data);
 
-    const response = await fetch(`${API_URL}/auth/send-otp`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data), 
-    });
+    const response = await axios.post(`${API_URL}/auth/send-otp`, data);
     
-    if (!response.ok) {
-        throw new Error("Failed to send OTP");
-    }
-    return await response.json();
+    // Axios throws automatically if the request fails
+    return response.data;
 };
- 
+
+
 export const registerUserWithOtp = async (userData) => {
     // userData includes: { name, username, email, password, otp }
-    const response = await fetch(`${API_URL}/auth/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(userData),
-    });
+    const response = await axios.post(`${API_URL}/auth/register`, userData);
 
-    if (!response.ok) {
-        throw new Error("Registration failed");
-    }
-    return await response.json();
+    // Axios throws automatically if the request fails
+    return response.data;
 };
-
 
 
 
 export const getGroupDetails = async (groupId) => {
-    // 1. Retrieve the token (using the key 'jwt_token' as requested)
     const token = localStorage.getItem("jwt_token");
 
-    const response = await fetch(`${API_URL}/groups/${groupId}/dashboard`, {
-        method: "GET",
-        headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`
-        }
-    });
+    try {
+        const response = await axios.get(`${API_URL}/groups/${groupId}/dashboard`, {
+            headers: {
+                "Authorization": `Bearer ${token}`
+            }
+        });
 
-    // 2. Handle errors manually (Fetch doesn't throw on 400/500 errors automatically)
-    if (!response.ok) {
-        throw new Error("Failed to fetch group details");
+        return response.data;
+    } catch (error) {
+        console.error("Error fetching group details:", error);
+        throw error;
     }
+};
 
-    // 3. Parse and return the JSON data
-    return await response.json();
+ 
+export const inviteUserToGroup = async (groupId, username) => {
+    const token = localStorage.getItem("jwt_token");
+
+    try {
+        // Payload structure: { email: "friend@example.com" }
+        const response = await axios.post(`${API_URL}/groups/${groupId}/invite`, 
+            { username }, 
+            {
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                }
+            }
+        );
+
+        return response.data;
+    } catch (error) {
+        console.error("Error inviting member:", error);
+        throw error;
+    }
+};
+
+
+ 
+
+export const addGroupExpense = async (groupId, expenseData) => {
+    const token = localStorage.getItem("jwt_token");
+
+    console.log(expenseData)
+     try {
+        // 2. Send Request
+        // Axios automatically stringifies the object to JSON
+        const response = await axios.post(
+            `${API_URL}/groups/${groupId}/expenses`, // URL
+            expenseData,                           // Data (Payload)
+            {                                        // Config (Headers)
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                }
+            }
+        );
+
+        return response.data;
+    } catch (error) {
+        console.error("Error adding expense:", error);
+        throw error;
+    }
 };

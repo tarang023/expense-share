@@ -1,5 +1,6 @@
 package com.expense.demo.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore; // <--- Import this
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -25,13 +26,13 @@ public class Expense {
     
     @ManyToOne
     @JoinColumn(name = "group_id") 
+    @JsonIgnore  // <--- CRITICAL FIX: Stops the infinite JSON loop
     private ExpenseGroup group;
 
- 
     @OneToMany(mappedBy = "expense", cascade = CascadeType.ALL)
     private List<ExpenseSplit> splits;
 
-    @ManyToOne // Many expenses can be created by One User
-    @JoinColumn(name = "paid_by_user_id") // This creates the foreign key column in DB
+    @ManyToOne 
+    @JoinColumn(name = "paid_by_user_id") 
     private User paidBy;
 }

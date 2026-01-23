@@ -16,6 +16,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.Authentication;
+ 
 
 import java.util.List;
 import java.util.Map;
@@ -42,9 +44,16 @@ public class GroupController {
     }
 
     @PostMapping("/createGroup")
-    public ExpenseGroup createGroup(@RequestBody Long userId, @RequestBody String name) {
-        return groupService.createGroup(userId, name);
-    }
+   public ExpenseGroup createGroup(@RequestBody Map<String, String> payload, Authentication authentication) {
+    
+  
+    String name = payload.get("name");
+
+   
+    Long userId = userRepo.findByUsername(authentication.getName()).getId();
+    
+    return groupService.createGroup(userId, name);
+}
 
     @GetMapping("/test")
     public String test() {
@@ -75,8 +84,11 @@ public class GroupController {
     }
 
     @GetMapping("/getAll")
-    public List<ExpenseGroup> getAllGroups() {
-        return groupService.getAllGroups();
+    public List<ExpenseGroup> getAllGroups(Authentication authentication) {
+          Long userId = userRepo.findByUsername(authentication.getName()).getId();
+
+          System.out.println("Fetching groups for user ID: " + userId);
+        return groupService.getAllGroups(userId);
     }
 
     @PostMapping("/{groupId}/add-member")
@@ -99,12 +111,7 @@ public class GroupController {
             @PathVariable Long groupId,
             @AuthenticationPrincipal UserDetails currentUser  
     ) {
-        // 1. Fetch Group
-
-        System.out.println("here inside getGroupDashboard");
-        System.out.println("here inside getGroupDashboard");
-        System.out.println("here inside getGroupDashboard");
-        System.out.println("here inside getGroupDashboard");
+      
         ExpenseGroup group = groupRepo.findById(groupId)
                 .orElseThrow(() -> new RuntimeException("Group not found"));
 
@@ -122,14 +129,7 @@ public class GroupController {
                 .collect(Collectors.toList());
 
 
-        System.out.println("Members DTOs: " + memberDtos);
-
-        System.out.println();
-        System.out.println();
-        System.out.println();
-        System.out.println();
-        System.out.println();
-
+    
 
         // 4. Map Expenses to DTOs
         // Assuming 'Expense' entity has fields: id, description, amount, paidBy (User), date
@@ -152,6 +152,21 @@ public class GroupController {
         );
 
         return ResponseEntity.ok(response);
+    }
+
+
+    @PostMapping("/{groupId}/expenses")
+    public ResponseEntity<ExpenseDto> addExpense(@PathVariable Long groupId, @RequestBody ExpenseDto expense) {
+       
+        ExpenseDto savedExpense = groupService.addExpense(groupId, expense);
+        return ResponseEntity.ok(savedExpense);
+    }
+
+    @PostMapping("/{groupId}/invite")
+    public ResponseEntity<String> inviteMember(@PathVariable Long groupId, @RequestBody Map<String, String> payload) {
+        String username = payload.get("username");
+        groupService.inviteMember(groupId, username);
+        return ResponseEntity.ok("Invite sent successfully");
     }
 
 
