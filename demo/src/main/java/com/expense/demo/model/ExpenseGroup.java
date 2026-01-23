@@ -17,9 +17,11 @@ public class ExpenseGroup {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
-    private String name; // "Goa Trip"
+    private String name;  
 
-    // RELATIOSHIP: A Group has many Members
+    @OneToMany(mappedBy = "group") // Bidirectional relationship to Expense
+    private List<Expense> expenses;
+ 
     @ManyToMany
     @JoinTable(
         name = "group_members",

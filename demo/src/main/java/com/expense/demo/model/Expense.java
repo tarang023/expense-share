@@ -23,13 +23,6 @@ public class Expense {
     private Double amount;
     private LocalDateTime date;
     
-    // --- FIX 1: Map to the User Entity, not the ID ---
-    // If you only want the ID number, remove @ManyToOne. 
-    // But usually, you want the relationship to the User object.
-    @ManyToOne
-    @JoinColumn(name = "payer_id") 
-    private User payer; 
-
     @ManyToOne
     @JoinColumn(name = "group_id") 
     private ExpenseGroup group;
@@ -37,4 +30,8 @@ public class Expense {
  
     @OneToMany(mappedBy = "expense", cascade = CascadeType.ALL)
     private List<ExpenseSplit> splits;
+
+    @ManyToOne // Many expenses can be created by One User
+    @JoinColumn(name = "paid_by_user_id") // This creates the foreign key column in DB
+    private User paidBy;
 }

@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.*;
 
 import com.expense.demo.service.AuthService;
 import com.expense.demo.service.EmailService;
+import com.expense.demo.service.JWTService;
 import com.expense.demo.service.OtpService;
 import com.expense.demo.model.OtpRequest;
 import com.expense.demo.model.User;
@@ -22,6 +23,9 @@ public class AuthController {
 
     @Autowired
     private AuthService service;
+
+    @Autowired
+    private JWTService jwtService;
 
     
 

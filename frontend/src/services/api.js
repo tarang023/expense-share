@@ -2,7 +2,7 @@ import axios from "axios";
 
 const API_URL = "http://localhost:8000/api";
 
-// --- EXISTING ---
+ 
 export const getSettlements = async (groupId) => {
     try {
        
@@ -55,7 +55,7 @@ export const getAllGroups = async () => {
 
         // axios.get(URL, CONFIG)
         const response = await axios.get(
-            `${API_URL}/groups`,
+            `${API_URL}/groups/getAll`,
             {
                 headers: {
                     "Authorization": `Bearer ${token}`
@@ -69,25 +69,27 @@ export const getAllGroups = async () => {
     }
 };
 
-export const addMemberToGroup = async (groupId, userId) => {
-    try {
-        const token = localStorage.getItem("jwt_token");
+export const addMemberToGroup = async (groupId, usernameToAdd) => {
 
-        // axios.post(URL, BODY, CONFIG)
-        // ⚠️ IMPORTANT: pass null/{} as the 2nd argument because this POST has no body data
+     const token = localStorage.getItem("jwt_token");
+     console.log("Adding member with token:", token);
+    console.log("Using token:", token);
+   try {
+    console.log("Adding member to group:", groupId, usernameToAdd);
         const response = await axios.post(
-            `${API_URL}/groups/${groupId}/add/${userId}`, 
-            {}, // Empty body
+            `${API_URL}/groups/${groupId}/add-member`, // The URL
+            { username: usernameToAdd },               // The Body (matches your Java Map/DTO)
             {
                 headers: {
-                    "Authorization": `Bearer ${token}`
+                    Authorization: `Bearer ${token}`,  // The Header
+                    "Content-Type": "application/json"
                 }
             }
         );
-        return response.data;
+        return response.data; // Returns the updated Group object
     } catch (error) {
-        console.error("Error adding member", error);
-        throw error;
+        // Helper to get the clean error message from backend
+        throw error.response ? error.response.data : new Error("Network Error");
     }
 };
 
@@ -150,3 +152,24 @@ export const registerUserWithOtp = async (userData) => {
 
 
 
+
+export const getGroupDetails = async (groupId) => {
+    // 1. Retrieve the token (using the key 'jwt_token' as requested)
+    const token = localStorage.getItem("jwt_token");
+
+    const response = await fetch(`${API_URL}/groups/${groupId}/dashboard`, {
+        method: "GET",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+        }
+    });
+
+    // 2. Handle errors manually (Fetch doesn't throw on 400/500 errors automatically)
+    if (!response.ok) {
+        throw new Error("Failed to fetch group details");
+    }
+
+    // 3. Parse and return the JSON data
+    return await response.json();
+};
