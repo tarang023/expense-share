@@ -1,11 +1,11 @@
 import { useState } from "react";
-// import { addGroupExpense } from "../../services/api";
+
 
 const AddExpenseModal = ({ isOpen, onClose, members, onAddExpense }) => {
     const [formData, setFormData] = useState({
         description: "",
         amount: "",
-        paidBy: members[0]?.username || "", // Default to first member
+        paidBy: members[0]?.username || "", 
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -25,14 +25,14 @@ const AddExpenseModal = ({ isOpen, onClose, members, onAddExpense }) => {
 
         setIsSubmitting(false);
         onClose();
-        // Reset form
+        
         setFormData({ description: "", amount: "", paidBy: members[0]?.username || "" });
     };
 
     return (
-        // Backdrop
+        
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            {/* Modal Content */}
+            {}
             <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden">
                 <div className="p-6 border-b border-gray-100 flex justify-between items-center">
                     <h3 className="text-xl font-bold text-gray-800">Add New Expense</h3>
@@ -40,7 +40,7 @@ const AddExpenseModal = ({ isOpen, onClose, members, onAddExpense }) => {
                 </div>
                 
                 <form onSubmit={handleSubmit} className="p-6 space-y-4">
-                    {/* Description */}
+                    {}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
                         <input 
@@ -53,7 +53,7 @@ const AddExpenseModal = ({ isOpen, onClose, members, onAddExpense }) => {
                         />
                     </div>
 
-                    {/* Amount */}
+                    {}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Amount (₹)</label>
                         <input 
@@ -67,7 +67,7 @@ const AddExpenseModal = ({ isOpen, onClose, members, onAddExpense }) => {
                         />
                     </div>
 
-                    {/* Paid By */}
+                    {}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Paid By</label>
                         <select 
@@ -81,7 +81,7 @@ const AddExpenseModal = ({ isOpen, onClose, members, onAddExpense }) => {
                         </select>
                     </div>
 
-                    {/* Actions */}
+                    {}
                     <div className="pt-4 flex gap-3">
                         <button 
                             type="button" 

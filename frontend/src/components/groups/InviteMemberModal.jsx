@@ -16,7 +16,7 @@ const InviteMemberModal = ({ isOpen, onClose, onInvite }) => {
         
 
         try {
-            // Call the parent function
+            
             await onInvite(username );
             
             setUsername("");
@@ -29,9 +29,9 @@ const InviteMemberModal = ({ isOpen, onClose, onInvite }) => {
     };
 
     return (
-        // Backdrop
+        
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            {/* Modal Content */}
+            {}
             <div className="bg-white rounded-xl shadow-xl w-full max-w-sm overflow-hidden">
                 <div className="p-6 border-b border-gray-100 flex justify-between items-center">
                     <h3 className="text-xl font-bold text-gray-800">Invite Member</h3>

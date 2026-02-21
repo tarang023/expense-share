@@ -17,10 +17,10 @@ const Login = () => {
     const handleLogin = async (e) => {
         e.preventDefault();
         try {
-            // Sending email and password to backend
+            
             const user = await loginUser(formData);
             
-            // Store user data/token
+            
             localStorage.setItem("user", JSON.stringify(user));
             
             navigate("/groups");

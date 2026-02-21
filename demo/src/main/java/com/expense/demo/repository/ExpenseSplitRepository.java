@@ -7,7 +7,7 @@ import java.util.List;
 
 @Repository
 public interface ExpenseSplitRepository extends JpaRepository<ExpenseSplit, Long> {
-    // Used by the Service to calculate who owes what
+    
     List<ExpenseSplit> findByExpenseId(Long expenseId);
 
 }

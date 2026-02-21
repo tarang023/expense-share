@@ -33,12 +33,12 @@ public class AuthController {
     private OtpService otpService;
  
     @PostMapping("/send-otp")
-    public ResponseEntity<?> sendOtp(@RequestBody OtpRequest request) { // Change String to OtpRequest
+    public ResponseEntity<?> sendOtp(@RequestBody OtpRequest request) { 
 
         String email = request.getEmail();
         String otp = otpService.generateOtp(email);
 
-        System.out.println("Generated OTP for " + email + ": " + otp); // For testing only
+        System.out.println("Generated OTP for " + email + ": " + otp); 
       
         try {
             emailService.sendOtpEmail(email, otp); 
@@ -83,7 +83,7 @@ public class AuthController {
     }
 }
 
-// Helper class for the incoming JSON
+
 class RegisterRequest {
     private String name;
     private String username;
@@ -91,7 +91,7 @@ class RegisterRequest {
     private String password;
     private String otp;
 
-    // Getters and Setters needed
+    
     public String getEmail() { return email; }
     public String getOtp() { return otp; }
      

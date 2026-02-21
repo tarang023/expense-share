@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { addMemberToGroup } from "../../services/api"// Import the function we just made
+import { addMemberToGroup } from "../../services/api"
 import { Link } from "react-router-dom";
 
 const GroupCard = ({ group }) => {
-    // State to hold the username typed in THIS specific card
+    
     const [usernameInput, setUsernameInput] = useState("");
     const [isLoading, setIsLoading] = useState(false);
 
@@ -12,13 +12,13 @@ const GroupCard = ({ group }) => {
 
         setIsLoading(true);
         try {
-            // CALL THE API HERE
+            
             await addMemberToGroup(group.id, usernameInput);
             
             alert(`Success! ${usernameInput} has been added to ${group.name}`);
-            setUsernameInput(""); // Clear the input box on success
+            setUsernameInput(""); 
         } catch (error) {
-            // Show the specific error from backend (e.g., "User not found")
+            
             alert(`Error: ${error}`);
         } finally {
             setIsLoading(false);
@@ -27,7 +27,7 @@ const GroupCard = ({ group }) => {
 
     return (
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-            {/* Header Section */}
+            {}
             <div className="flex justify-between items-start mb-4">
                 <div>
                     <h3 className="text-xl font-bold text-gray-800">{group.name}</h3>
@@ -38,12 +38,12 @@ const GroupCard = ({ group }) => {
                 </Link>
             </div>
 
-            {/* Members List (Optional - just to show current count) */}
+            {}
             <div className="mb-4 text-sm text-gray-600">
                 Members: {group.members ? group.members.length : 0}
             </div>
 
-            {/* Add Member Section */}
+            {}
             <div className="mt-4 pt-4 border-t border-gray-100">
                 <label className="text-xs text-gray-500 font-semibold uppercase">Add Member by Username</label>
                 <div className="flex gap-2 mt-2">

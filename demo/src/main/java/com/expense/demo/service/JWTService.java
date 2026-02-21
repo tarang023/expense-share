@@ -25,13 +25,13 @@ public class JWTService {
 
           secretkey = "TmV3U2VjcmV0S2V5Rm9ySldTU2lnbmluZ1B1cnBvc2VzMTIzNDU2Nzg=";
 
-        // try {
-        //     KeyGenerator keyGen = KeyGenerator.getInstance("HmacSHA256");
-        //     SecretKey sk = keyGen.generateKey();
-        //     secretkey = Base64.getEncoder().encodeToString(sk.getEncoded());
-        // } catch (NoSuchAlgorithmException e) {
-        //     throw new RuntimeException(e);
-        // }
+        
+        
+        
+        
+        
+        
+        
     }
 
     public String generateToken(String username) {
@@ -54,11 +54,11 @@ public class JWTService {
     }
 
     public String extractUserName(String token) {
-        // extract the username from jwt token
+        
         return extractClaim(token, Claims::getSubject);
     }
     public Long extractUserId(String token) {
-        // extract the user id from jwt token
+        
         return extractClaim(token, claims -> Long.parseLong(claims.get("userId").toString()));
     }
 

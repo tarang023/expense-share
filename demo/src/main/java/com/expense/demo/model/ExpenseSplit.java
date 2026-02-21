@@ -1,4 +1,5 @@
 package com.expense.demo.model;
+
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -19,7 +20,27 @@ public class ExpenseSplit {
 
     @ManyToOne
     @JoinColumn(name = "user_id")
-    private User user; // Who owes this specific part?
+    private User user; 
 
-    private Double amountOwed; // e.g., 33.33
+    private Double amountOwed; 
+
+    public void setExpense(Expense expense) {
+        this.expense = expense;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+    public void setAmountOwed(Double amountOwed) {
+        this.amountOwed = amountOwed;
+    }
+
+    public Double getAmountOwed() {
+        return amountOwed;
+    }
+
+    public User getUser() {
+        return user;
+    }
 }

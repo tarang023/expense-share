@@ -25,7 +25,7 @@ const GroupManager = () => {
         <div className="container mx-auto mt-10 p-4 max-w-4xl">
             <h1 className="text-3xl font-bold mb-8">Manage Groups</h1>
 
-            {/* Create Group Form */}
+            {}
             <div className="bg-white p-6 rounded-xl shadow-sm mb-8">
                  <form onSubmit={handleCreateGroup} className="flex gap-4">
                     <input 
@@ -38,10 +38,10 @@ const GroupManager = () => {
                 </form>
             </div>
 
-            {/* List Groups - Clean and Simple! */}
+            {}
             <div className="grid gap-4 md:grid-cols-2">
                 {groups.map(group => (
-                    // Pass the data down to the child
+                    
                     <GroupCard key={group.id} group={group} />
                 ))}
             </div>

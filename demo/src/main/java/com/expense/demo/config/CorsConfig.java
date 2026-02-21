@@ -16,16 +16,16 @@ public class CorsConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         
-        // 1. Allow your specific Frontend URL
+        
         configuration.setAllowedOrigins(List.of("http://localhost:5173")); 
         
-        // 2. Allow specific methods (OPTIONS is crucial!)
+        
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         
-        // 3. Allow Headers (Authorization is vital for JWT)
+        
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
         
-        // 4. Allow Credentials (optional, but good for future-proofing)
+        
         configuration.setAllowCredentials(true); 
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

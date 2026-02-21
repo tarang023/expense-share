@@ -7,7 +7,7 @@ import java.util.List;
 
 @Repository
 public interface ExpenseRepository extends JpaRepository<Expense, Long> {
-    // JpaRepository gives us findAll(), save(), findById() automatically.
+    
     List<Expense> findByGroupId(Long groupId);
 
 }

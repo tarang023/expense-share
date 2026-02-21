@@ -4,7 +4,7 @@ import { sendOtp, registerUserWithOtp } from "../services/api";
 import { useNavigate } from "react-router-dom";
 
 const Register = () => {
-    // 1. Form Data State
+    
     const [formData, setFormData] = useState({
         name: "",
         username: "",
@@ -12,9 +12,9 @@ const Register = () => {
         password: ""
     });
     
-    // 2. UI Control State
+    
     const [otp, setOtp] = useState("");
-    const [step, setStep] = useState(1); // 1 = Details, 2 = OTP Input, 3 = Success
+    const [step, setStep] = useState(1); 
     const [isLoading, setIsLoading] = useState(false);
     
     const navigate = useNavigate();
@@ -23,14 +23,14 @@ const Register = () => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-    // --- LOGIC STEP 1: Send OTP ---
+    
     const handleSendOtp = async (e) => {
         e.preventDefault();
         setIsLoading(true);
         try {
         
             await sendOtp({ email: formData.email });
-            setStep(2); // Move to OTP screen
+            setStep(2); 
         } catch (error) {
             alert("Failed to send OTP. Please check the email provided.");
         } finally {
@@ -38,14 +38,14 @@ const Register = () => {
         }
     };
 
-    // --- LOGIC STEP 2: Verify & Create Account ---
+    
     const handleVerifyAndRegister = async (e) => {
         e.preventDefault();
         setIsLoading(true);
         try {
-            // Send details + OTP to backend to finalize account creation
+            
             await registerUserWithOtp({ ...formData, otp });
-            setStep(3); // Move to Success screen
+            setStep(3); 
         } catch (error) {
             alert("Invalid OTP or Registration failed!");
         } finally {
@@ -60,7 +60,7 @@ const Register = () => {
                     {step === 2 ? "Verify Email" : "Create Account"}
                 </h2>
                 
-                {/* --- VIEW 1: USER DETAILS FORM --- */}
+                {}
                 {step === 1 && (
                     <>
                         <form onSubmit={handleSendOtp} className="space-y-4">
@@ -121,7 +121,7 @@ const Register = () => {
                     </>
                 )}
 
-                {/* --- VIEW 2: OTP VERIFICATION --- */}
+                {}
                 {step === 2 && (
                     <form onSubmit={handleVerifyAndRegister} className="space-y-4">
                         <div className="text-center mb-4 text-gray-600 text-sm">
@@ -158,7 +158,7 @@ const Register = () => {
                     </form>
                 )}
 
-                {/* --- VIEW 3: SUCCESS --- */}
+                {}
                 {step === 3 && (
                     <div className="text-center">
                         <div className="bg-green-100 text-green-700 p-4 rounded-lg mb-4">

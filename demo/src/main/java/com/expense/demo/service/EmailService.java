@@ -20,14 +20,14 @@ public class EmailService {
         System.out.println("DEBUG CHECK:");
         System.out.println("From (senderEmail): '" + senderEmail + "'");
         System.out.println("To (recipient): '" + to + "'");
-        // ----------------------
+        
 
         SimpleMailMessage message = new SimpleMailMessage();
         
-        // Fallback: If @Value failed, hardcode it to test
+        
         if (senderEmail == null) {
             System.err.println("CRITICAL ERROR: senderEmail is NULL. Check application.properties.");
-            // TEMPORARY FIX: Hardcode your email here to see if it works
+            
             message.setFrom("YOUR_REAL_EMAIL@gmail.com"); 
         } else {
             message.setFrom(senderEmail);
