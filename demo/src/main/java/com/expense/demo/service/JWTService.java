@@ -24,14 +24,6 @@ public class JWTService {
     public JWTService() {
 
           secretkey = "TmV3U2VjcmV0S2V5Rm9ySldTU2lnbmluZ1B1cnBvc2VzMTIzNDU2Nzg=";
-
-        
-        
-        
-        
-        
-        
-        
     }
 
     public String generateToken(String username) {
