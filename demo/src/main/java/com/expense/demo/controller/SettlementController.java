@@ -2,6 +2,8 @@ package com.expense.demo.controller;
 
 import com.expense.demo.model.SettlementTransaction;
 import com.expense.demo.service.SettlementService;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
@@ -32,8 +34,9 @@ public class SettlementController {
     @PostMapping("/settle/{groupId}/pay")
     public ResponseEntity<String> recordSettlement(
             @PathVariable Long groupId,
-            @RequestBody SettlementTransaction transaction) {
-        settlementService.recordSettlement(groupId, transaction);
+            @RequestBody SettlementTransaction transaction,
+            @AuthenticationPrincipal UserDetails currentUser) {
+        settlementService.recordSettlement(groupId, transaction, currentUser.getUsername());
         return ResponseEntity.ok("Settlement recorded successfully");
     }
 

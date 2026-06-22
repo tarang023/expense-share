@@ -8,24 +8,24 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor 
 @AllArgsConstructor
 public class SettlementTransaction {
-    private Long payerId;
-    private Long payeeId;
+    private Long debtorId;
+    private Long creditorId;
     private Double amount;
 
-    public Long getPayerId() {
-        return payerId;
+    public Long getDebtorId() {
+        return debtorId;
     }
 
-    public void setPayerId(Long payerId) {
-        this.payerId = payerId;
+    public void setDebtorId(Long debtorId) {
+        this.debtorId = debtorId;
     }
 
-    public Long getPayeeId() {
-        return payeeId;
+    public Long getCreditorId() {
+        return creditorId;
     }
 
-    public void setPayeeId(Long payeeId) {
-        this.payeeId = payeeId;
+    public void setCreditorId(Long creditorId) {
+        this.creditorId = creditorId;
     }
 
     public Double getAmount() {

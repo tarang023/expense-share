@@ -9,8 +9,12 @@ import com.expense.demo.repository.UserRepository;
 import com.expense.demo.repository.ExpenseGroupRepository;
 import com.expense.demo.model.ExpenseGroup;
 import com.expense.demo.model.User;
+import com.expense.demo.dto.SimplifiedDebtDto;
+import com.expense.demo.dto.MemberDto;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
@@ -29,114 +33,139 @@ public class SettlementService {
         this.groupRepo = groupRepo;
     }
 
-    
-    public List<SettlementTransaction> getSettlementPlan(Long groupId) {
-        
-        
+    public List<SimplifiedDebtDto> calculateSimplifiedDebts(Long groupId) {
+        // Step A: Net Balances
         Map<Long, Double> balances = new HashMap<>();
-
-        
         List<Expense> expenses = expenseRepo.findByGroupId(groupId);
 
         for (Expense e : expenses) {
-            
             balances.put(e.getPaidBy().getId(), balances.getOrDefault(e.getPaidBy().getId(), 0.0) + e.getAmount());
 
-            
-            
-            
             List<ExpenseSplit> splits = splitRepo.findByExpenseId(e.getId());
-
             for (ExpenseSplit s : splits) {
-                
                 balances.put(s.getUser().getId(), balances.getOrDefault(s.getUser().getId(), 0.0) - s.getAmountOwed());
             }
         }
 
-        
-        PriorityQueue<Map.Entry<Long, Double>> debtors = new PriorityQueue<>(Map.Entry.comparingByValue()); 
-                                                                                                            
-                                                                                                            
-
-        PriorityQueue<Map.Entry<Long, Double>> creditors = new PriorityQueue<>(
-                (a, b) -> Double.compare(b.getValue(), a.getValue())); 
+        // Step B: Split into debtors and creditors
+        PriorityQueue<Map.Entry<Long, Double>> debtors = new PriorityQueue<>(Map.Entry.comparingByValue());
+        PriorityQueue<Map.Entry<Long, Double>> creditors = new PriorityQueue<>((a, b) -> Double.compare(b.getValue(), a.getValue()));
 
         for (Map.Entry<Long, Double> entry : balances.entrySet()) {
-            
-            if (entry.getValue() < -0.01)
-                debtors.add(entry);
-            else if (entry.getValue() > 0.01)
-                creditors.add(entry);
+            if (entry.getValue() < -0.01) debtors.add(entry);
+            else if (entry.getValue() > 0.01) creditors.add(entry);
+        }
+
+        List<SimplifiedDebtDto> simplifiedDebts = new ArrayList<>();
+
+        // Step C: Greedy Match
+        while (!debtors.isEmpty() && !creditors.isEmpty()) {
+            var debtorEntry = debtors.poll();
+            var creditorEntry = creditors.poll();
+
+            double debt = Math.abs(debtorEntry.getValue());
+            double credit = creditorEntry.getValue();
+            double settleAmount = Math.min(debt, credit);
+
+            User debtorUser = userRepo.findById(debtorEntry.getKey()).orElse(null);
+            User creditorUser = userRepo.findById(creditorEntry.getKey()).orElse(null);
+
+            if (debtorUser != null && creditorUser != null) {
+                SimplifiedDebtDto dto = new SimplifiedDebtDto(
+                        new MemberDto(debtorUser.getId(), debtorUser.getUsername()),
+                        new MemberDto(creditorUser.getId(), creditorUser.getUsername()),
+                        settleAmount
+                );
+                simplifiedDebts.add(dto);
+            }
+
+            double remainingDebt = debt - settleAmount;
+            double remainingCredit = credit - settleAmount;
+
+            if (remainingCredit > 0.01) { creditorEntry.setValue(remainingCredit); creditors.add(creditorEntry); }
+            if (remainingDebt > 0.01) { debtorEntry.setValue(-remainingDebt); debtors.add(debtorEntry); }
+        }
+
+        return simplifiedDebts;
+    }
+
+    public List<SettlementTransaction> getSettlementPlan(Long groupId) {
+        Map<Long, Double> balances = new HashMap<>();
+
+        List<Expense> expenses = expenseRepo.findByGroupId(groupId);
+
+        for (Expense e : expenses) {
+            balances.put(e.getPaidBy().getId(), balances.getOrDefault(e.getPaidBy().getId(), 0.0) + e.getAmount());
+
+            List<ExpenseSplit> splits = splitRepo.findByExpenseId(e.getId());
+            for (ExpenseSplit s : splits) {
+                balances.put(s.getUser().getId(), balances.getOrDefault(s.getUser().getId(), 0.0) - s.getAmountOwed());
+            }
+        }
+
+        PriorityQueue<Map.Entry<Long, Double>> debtors   = new PriorityQueue<>(Map.Entry.comparingByValue());
+        PriorityQueue<Map.Entry<Long, Double>> creditors = new PriorityQueue<>((a, b) -> Double.compare(b.getValue(), a.getValue()));
+
+        for (Map.Entry<Long, Double> entry : balances.entrySet()) {
+            if (entry.getValue() < -0.01)      debtors.add(entry);
+            else if (entry.getValue() > 0.01)  creditors.add(entry);
         }
 
         List<SettlementTransaction> transactions = new ArrayList<>();
 
-        
         while (!debtors.isEmpty() && !creditors.isEmpty()) {
-            var debtor = debtors.poll();
+            var debtor   = debtors.poll();
             var creditor = creditors.poll();
 
-            double debt = Math.abs(debtor.getValue());
+            double debt   = Math.abs(debtor.getValue());
             double credit = creditor.getValue();
-
-            
             double settleAmount = Math.min(debt, credit);
 
             SettlementTransaction st = new SettlementTransaction();
-            st.setPayerId(debtor.getKey());
-            st.setPayeeId(creditor.getKey());
+            st.setDebtorId(debtor.getKey());
+            st.setCreditorId(creditor.getKey());
             st.setAmount(settleAmount);
             transactions.add(st);
 
-            
-            double remainingDebt = debt - settleAmount;
+            double remainingDebt   = debt   - settleAmount;
             double remainingCredit = credit - settleAmount;
 
-            if (remainingCredit > 0.01) {
-                creditor.setValue(remainingCredit);
-                creditors.add(creditor);
-            }
-            if (remainingDebt > 0.01) {
-                debtor.setValue(-remainingDebt); 
-                debtors.add(debtor);
-            }
+            if (remainingCredit > 0.01) { creditor.setValue(remainingCredit); creditors.add(creditor); }
+            if (remainingDebt   > 0.01) { debtor.setValue(-remainingDebt);    debtors.add(debtor); }
         }
         return transactions;
     }
 
-    public void recordSettlement(Long groupId, SettlementTransaction transaction) {
+    @Transactional
+    public void recordSettlement(Long groupId, SettlementTransaction transaction, String authenticatedUsername) {
         ExpenseGroup group = groupRepo.findById(groupId)
                 .orElseThrow(() -> new RuntimeException("Group not found"));
 
-        User payer = userRepo.findById(transaction.getPayerId())
-                .orElseThrow(() -> new RuntimeException("Payer not found"));
+        User payer = userRepo.findById(transaction.getDebtorId())
+                .orElseThrow(() -> new RuntimeException("Debtor not found: " + transaction.getDebtorId()));
 
-        User payee = userRepo.findById(transaction.getPayeeId())
-                .orElseThrow(() -> new RuntimeException("Payee not found"));
+        if (!payer.getUsername().equals(authenticatedUsername)) {
+            throw new RuntimeException("Only the debtor can initiate a settlement.");
+        }
 
-        
+        User payee = userRepo.findById(transaction.getCreditorId())
+                .orElseThrow(() -> new RuntimeException("Creditor not found: " + transaction.getCreditorId()));
+
+        // Record the settlement as an expense paid by the debtor
         Expense settlementExpense = new Expense();
         settlementExpense.setAmount(transaction.getAmount());
-        settlementExpense.setDescription("Settlement from " + payer.getUsername() + " to " + payee.getUsername());
-        settlementExpense.setDate(java.time.LocalDateTime.now());
+        settlementExpense.setDescription("Settlement: " + payer.getUsername() + " → " + payee.getUsername());
+        settlementExpense.setDate(LocalDateTime.now());
         settlementExpense.setGroup(group);
-        settlementExpense.setPaidBy(payer); 
-
-        
+        settlementExpense.setPaidBy(payer);
         Expense savedExpense = expenseRepo.save(settlementExpense);
 
-        
-        
-        
-        
-        
-        
+        // The creditor (payee) "owes" the full amount — this cancels the original debt
+        // FIX: save split directly instead of via immutable List.of()
         ExpenseSplit split = new ExpenseSplit();
         split.setExpense(savedExpense);
         split.setUser(payee);
         split.setAmountOwed(transaction.getAmount());
-
-        savedExpense.setSplits(java.util.List.of(split));
-        expenseRepo.save(savedExpense); 
+        splitRepo.save(split);
     }
 }

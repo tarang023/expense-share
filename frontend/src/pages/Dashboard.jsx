@@ -3,8 +3,10 @@ import { useParams, Link } from "react-router-dom";
 import { addMemberToGroup, getGroupDetails, getSettlements, recordSettlement, addGroupExpense, inviteUserToGroup } from "../services/api"; 
 import AddExpenseModal from "../components/groups/AddExpenseModal"
 import InviteMemberModal from "../components/groups/InviteMemberModal";
+import { useAuth } from "../services/useAuth";
 
 const Dashboard = () => {
+    const { username } = useAuth();
     const { groupId } = useParams();
     const [groupData, setGroupData] = useState(null);
     const [settlements, setSettlements] = useState([]);
@@ -21,9 +23,9 @@ const Dashboard = () => {
             try {
                 const data = await getGroupDetails(groupId);
                 setGroupData(data);
-
-                const settlementData = await getSettlements(groupId);
-                setSettlements(settlementData);
+                
+                // We now use the simplified debts returned by getGroupDetails!
+                setSettlements(data.simplifiedDebts || []);
             } catch (err) {
                 setError("Failed to load group details.");
             } finally {
@@ -61,7 +63,7 @@ const Dashboard = () => {
         console.log(`Inviting user: ${username}`);
         alert(`Invite sent to ${username}!`);
 
-        await inviteUserToGroup(groupData, username)
+        await inviteUserToGroup(groupData.groupId, username)
 
         
     };
@@ -73,12 +75,11 @@ const Dashboard = () => {
             alert("Settlement recorded successfully!");
 
             
-            const [newData, newSettlements] = await Promise.all([
-                getGroupDetails(groupId),
-                getSettlements(groupId)
-            ]);
+            // Refresh group data which now includes simplifiedDebts
+            const newData = await getGroupDetails(groupId);
+            
             setGroupData(newData);
-            setSettlements(newSettlements);
+            setSettlements(newData.simplifiedDebts || []);
         } catch (error) {
             alert("Error recording settlement.");
         }
@@ -197,25 +198,44 @@ const Dashboard = () => {
                             <div className="divide-y divide-gray-100">
                                 {settlements.length > 0 ? (
                                     settlements.map((s, idx) => {
+                                        const debtorName = s.debtor?.username || `Unknown Debtor`;
+                                        const creditorName = s.creditor?.username || `Unknown Creditor`;
                                         
-                                        const payerName = groupData.members.find(m => m.id === s.payerId)?.username || `User ${s.payerId}`;
-                                        const payeeName = groupData.members.find(m => m.id === s.payeeId)?.username || `User ${s.payeeId}`;
+                                        const currentUserMember = groupData.members.find(m => m.username === username);
+                                        const currentUserId = currentUserMember?.id;
+
+                                        const isDebtor = currentUserId === s.debtor?.id;
+                                        const isCreditor = currentUserId === s.creditor?.id;
 
                                         return (
                                             <div key={idx} className="p-4 flex justify-between items-center hover:bg-gray-50 transition">
                                                 <div className="flex items-center gap-3">
-                                                    <span className="font-bold text-red-500">{payerName}</span>
-                                                    <span className="text-gray-500 text-sm">owes</span>
-                                                    <span className="font-bold text-green-600">{payeeName}</span>
+                                                    {isDebtor ? (
+                                                        <span className="text-gray-700">You owe <span className="font-bold text-green-600">{creditorName}</span></span>
+                                                    ) : isCreditor ? (
+                                                        <span className="text-gray-700"><span className="font-bold text-red-500">{debtorName}</span> owes you</span>
+                                                    ) : (
+                                                        <>
+                                                            <span className="font-bold text-red-500">{debtorName}</span>
+                                                            <span className="text-gray-500 text-sm">owes</span>
+                                                            <span className="font-bold text-green-600">{creditorName}</span>
+                                                        </>
+                                                    )}
                                                 </div>
                                                 <div className="flex items-center gap-4">
                                                     <span className="font-bold text-lg">₹{s.amount.toFixed(2)}</span>
-                                                    <button
-                                                        onClick={() => handleSettleUp(s)}
-                                                        className="text-xs bg-indigo-100 text-indigo-700 px-3 py-1.5 rounded font-bold hover:bg-indigo-200 transition"
-                                                    >
-                                                        Settle Up
-                                                    </button>
+                                                    {isDebtor && (
+                                                        <button
+                                                            onClick={() => handleSettleUp({
+                                                                debtorId: s.debtor.id,
+                                                                creditorId: s.creditor.id,
+                                                                amount: s.amount
+                                                            })}
+                                                            className="text-xs bg-indigo-100 text-indigo-700 px-3 py-1.5 rounded font-bold hover:bg-indigo-200 transition"
+                                                        >
+                                                            Settle Up
+                                                        </button>
+                                                    )}
                                                 </div>
                                             </div>
                                         );
@@ -236,7 +256,6 @@ const Dashboard = () => {
             <AddExpenseModal
                 isOpen={isExpenseModalOpen}
                 onClose={() => setExpenseModalOpen(false)}
-                members={groupData.members || []}
                 onAddExpense={handleAddExpense}
             />
 

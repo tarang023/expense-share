@@ -64,7 +64,7 @@ public class JWTFilter extends OncePerRequestFilter {
             
             System.out.println("3. User is now Authenticated in Spring Security");
         } else {
-            System.out.println("❌ Token Validation FAILED for user: " + username);
+            System.out.println(" Token Validation FAILED for user: " + username);
         }
     }
 

@@ -217,3 +217,38 @@ export const addGroupExpense = async (groupId, expenseData) => {
         throw error;
     }
 };
+
+// ── Invitation API ────────────────────────────────────────────────────────────
+
+export const getPendingInvites = async () => {
+    const token = localStorage.getItem("jwt_token");
+    try {
+        const response = await axios.get(`${API_URL}/groups/invites`, {
+            headers: { "Authorization": `Bearer ${token}` }
+        });
+        return response.data;
+    } catch (error) {
+        console.error("Error fetching invites:", error);
+        return [];
+    }
+};
+
+export const acceptInvite = async (inviteId) => {
+    const token = localStorage.getItem("jwt_token");
+    const response = await axios.post(
+        `${API_URL}/groups/invites/${inviteId}/accept`,
+        {},
+        { headers: { "Authorization": `Bearer ${token}` } }
+    );
+    return response.data;
+};
+
+export const rejectInvite = async (inviteId) => {
+    const token = localStorage.getItem("jwt_token");
+    const response = await axios.post(
+        `${API_URL}/groups/invites/${inviteId}/reject`,
+        {},
+        { headers: { "Authorization": `Bearer ${token}` } }
+    );
+    return response.data;
+};
