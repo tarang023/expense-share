@@ -1,6 +1,8 @@
 import axios from "axios";
 
-const API_URL = "http://localhost:8000/api";
+
+const API_URL = import.meta.env.VITE_SPRING_BOOT_URL;
+console.log(API_URL); // Log the API URL to verify it's being read correctly
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
