@@ -1,11 +1,14 @@
 import { Navigate, Outlet } from "react-router-dom";
+import { isTokenValid } from "../services/useAuth";
+import { clearAuthAndRedirect } from "../services/api";
 
 /**
  * ProtectedRoute
  *
- * Wraps private routes. If "jwt_token" is absent from localStorage the user is
- * redirected to /login. The `replace` prop replaces the current history entry so
- * the browser back-button does not loop back to a protected page.
+ * Guards every private route. Performs two checks:
+ *  1. Token existence  – if absent, redirect to /login.
+ *  2. Token expiry     – decode the JWT's `exp` claim; if expired, wipe
+ *                        localStorage and redirect to /login.
  *
  * Usage in App.jsx:
  *   <Route element={<ProtectedRoute />}>
@@ -14,9 +17,19 @@ import { Navigate, Outlet } from "react-router-dom";
  *   </Route>
  */
 function ProtectedRoute() {
-  const isAuthenticated = Boolean(localStorage.getItem("jwt_token"));
+    const token = localStorage.getItem("jwt_token");
 
-  return isAuthenticated ? <Outlet /> : <Navigate to="/login" replace />;
+    if (!token) {
+        return <Navigate to="/login" replace />;
+    }
+
+    if (!isTokenValid(token)) {
+        // Token exists but is expired – clear everything and send to login.
+        clearAuthAndRedirect();
+        return null; // clearAuthAndRedirect performs a hard redirect; this is a safety fallback.
+    }
+
+    return <Outlet />;
 }
 
 export default ProtectedRoute;

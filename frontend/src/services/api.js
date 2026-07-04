@@ -2,253 +2,147 @@ import axios from "axios";
 
 const API_URL = "http://localhost:8000/api";
 
- 
-export const getSettlements = async (groupId) => {
-    try {
-       
-        const token = localStorage.getItem("jwt_token"); 
+// ── Helpers ──────────────────────────────────────────────────────────────────
 
-        const response = await axios.get(`${API_URL}/settle/${groupId}`, {
-          
-            headers: {
-                "Authorization": `Bearer ${token}` 
-            }
-        });
-        
-        return response.data;
-    } catch (error) {
-        console.error("Error fetching settlements", error);
-        return [];
-    }
-};
+/**
+ * Remove every auth-related key from localStorage and redirect to /login.
+ * Exported so the logout button can call it directly without duplicating logic.
+ */
+export function clearAuthAndRedirect() {
+    localStorage.removeItem("jwt_token");
+    localStorage.removeItem("user");
+    window.location.href = "/login";
+}
 
-export const recordSettlement = async (groupId, transaction) => {
-    try {
+// ── Shared Axios instance ─────────────────────────────────────────────────────
+
+const apiClient = axios.create({ baseURL: API_URL });
+
+/**
+ * Request interceptor – automatically attaches the JWT Bearer token to every
+ * outgoing request so individual API functions don't have to do it manually.
+ */
+apiClient.interceptors.request.use(
+    (config) => {
         const token = localStorage.getItem("jwt_token");
-        const response = await axios.post(`${API_URL}/settle/${groupId}/pay`, transaction, {
-            headers: {
-                "Authorization": `Bearer ${token}`,
-                "Content-Type": "application/json"
-            }
-        });
-        return response.data;
-    } catch (error) {
-        console.error("Error recording settlement", error);
-        throw error;
+        if (token) {
+            config.headers["Authorization"] = `Bearer ${token}`;
+        }
+        return config;
+    },
+    (error) => Promise.reject(error)
+);
+
+/**
+ * Response interceptor – if the backend returns 401 Unauthorized or
+ * 403 Forbidden the session is considered invalid.  We wipe localStorage and
+ * hard-redirect to /login so no stale data can be seen.
+ */
+apiClient.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        const status = error.response?.status;
+        if (status === 401 || status === 403) {
+            clearAuthAndRedirect();
+        }
+        return Promise.reject(error);
     }
+);
+
+// ── Auth ──────────────────────────────────────────────────────────────────────
+
+export const loginUser = async (userData) => {
+    // Login does not need the auth header – use plain axios to avoid the
+    // interceptor attaching a potentially stale/invalid token.
+    const response = await axios.post(`${API_URL}/auth/login`, userData);
+    const data = response.data;
+    const token = data.token;
+    localStorage.setItem("jwt_token", token);
+    return data;
 };
 
 export const registerUser = async (userData) => {
-    
     const response = await axios.post(`${API_URL}/users/register`, userData);
     return response.data;
 };
 
+export const sendOtp = async (data) => {
+    const response = await axios.post(`${API_URL}/auth/send-otp`, data);
+    return response.data;
+};
+
+export const registerUserWithOtp = async (userData) => {
+    const response = await axios.post(`${API_URL}/auth/register`, userData);
+    return response.data;
+};
+
+// ── Groups ────────────────────────────────────────────────────────────────────
+
 export const createGroup = async (groupName) => {
-    try {
-        const token = localStorage.getItem("jwt_token");
-        
-        
-        const response = await axios.post(
-            `${API_URL}/groups/createGroup`, 
-            { name: groupName }, 
-            {
-                headers: {
-                    "Authorization": `Bearer ${token}`
-                }
-            }
-        );
-        return response.data;
-    } catch (error) {
-        console.error("Error creating group", error);
-        throw error;
-    }
+    const response = await apiClient.post("/groups/createGroup", { name: groupName });
+    return response.data;
 };
 
 export const getAllGroups = async () => {
-    try {
-        const token = localStorage.getItem("jwt_token");
-
-        
-        const response = await axios.get(
-            `${API_URL}/groups/getAll`,
-            {
-                headers: {
-                    "Authorization": `Bearer ${token}`
-                }
-            }
-        );
-        return response.data;
-    } catch (error) {
-        console.error("Error fetching groups", error);
-        throw error;
-    }
+    const response = await apiClient.get("/groups/getAll");
+    return response.data;
 };
 
 export const addMemberToGroup = async (groupId, usernameToAdd) => {
-
-     const token = localStorage.getItem("jwt_token");
-     console.log("Adding member with token:", token);
-    console.log("Using token:", token);
-   try {
-    console.log("Adding member to group:", groupId, usernameToAdd);
-        const response = await axios.post(
-            `${API_URL}/groups/${groupId}/add-member`, 
-            { username: usernameToAdd },               
-            {
-                headers: {
-                    Authorization: `Bearer ${token}`,  
-                    "Content-Type": "application/json"
-                }
-            }
-        );
-        return response.data; 
-    } catch (error) {
-        
-        throw error.response ? error.response.data : new Error("Network Error");
-    }
-};
-
-export const loginUser = async (userData) => {
-    
-    const response = await axios.post('http://localhost:8000/api/auth/login', userData);
-
-    console.log("Login response status:", response);
-
-    
-    
-
-    const data = response.data;
-    console.log("Login response received:", data);
-    console.log("Response status:", data.token);
-    console.log("reson", response.token); 
-    console.log("status", response.statusText); 
-    
-    const token = data.token;
-    localStorage.setItem("jwt_token", token);
-
-    return data;
-};
-
- 
-export const sendOtp = async (data) => {
-    console.log("new Sending OTP to:", data);
-
-    const response = await axios.post(`${API_URL}/auth/send-otp`, data);
-    
-    
+    const response = await apiClient.post(
+        `/groups/${groupId}/add-member`,
+        { username: usernameToAdd },
+        { headers: { "Content-Type": "application/json" } }
+    );
     return response.data;
 };
-
-
-export const registerUserWithOtp = async (userData) => {
-    
-    const response = await axios.post(`${API_URL}/auth/register`, userData);
-
-    
-    return response.data;
-};
-
-
 
 export const getGroupDetails = async (groupId) => {
-    const token = localStorage.getItem("jwt_token");
-
-    try {
-        const response = await axios.get(`${API_URL}/groups/${groupId}/dashboard`, {
-            headers: {
-                "Authorization": `Bearer ${token}`
-            }
-        });
-
-        return response.data;
-    } catch (error) {
-        console.error("Error fetching group details:", error);
-        throw error;
-    }
+    const response = await apiClient.get(`/groups/${groupId}/dashboard`);
+    return response.data;
 };
 
- 
 export const inviteUserToGroup = async (groupId, username) => {
-    const token = localStorage.getItem("jwt_token");
-
-    try {
-        
-        const response = await axios.post(`${API_URL}/groups/${groupId}/invite`, 
-            { username }, 
-            {
-                headers: {
-                    "Authorization": `Bearer ${token}`
-                }
-            }
-        );
-
-        return response.data;
-    } catch (error) {
-        console.error("Error inviting member:", error);
-        throw error;
-    }
+    const response = await apiClient.post(`/groups/${groupId}/invite`, { username });
+    return response.data;
 };
-
-
- 
 
 export const addGroupExpense = async (groupId, expenseData) => {
-    const token = localStorage.getItem("jwt_token");
-
-    console.log(expenseData)
-     try {
-        
-        
-        const response = await axios.post(
-            `${API_URL}/groups/${groupId}/expenses`, 
-            expenseData,                           
-            {                                        
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}`
-                }
-            }
-        );
-
-        return response.data;
-    } catch (error) {
-        console.error("Error adding expense:", error);
-        throw error;
-    }
+    const response = await apiClient.post(
+        `/groups/${groupId}/expenses`,
+        expenseData,
+        { headers: { "Content-Type": "application/json" } }
+    );
+    return response.data;
 };
 
-// ── Invitation API ────────────────────────────────────────────────────────────
+// ── Settlements ───────────────────────────────────────────────────────────────
+
+export const getSettlements = async (groupId) => {
+    const response = await apiClient.get(`/settle/${groupId}`);
+    return response.data;
+};
+
+export const recordSettlement = async (groupId, transaction) => {
+    const response = await apiClient.post(`/settle/${groupId}/pay`, transaction, {
+        headers: { "Content-Type": "application/json" },
+    });
+    return response.data;
+};
+
+// ── Invitations ───────────────────────────────────────────────────────────────
 
 export const getPendingInvites = async () => {
-    const token = localStorage.getItem("jwt_token");
-    try {
-        const response = await axios.get(`${API_URL}/groups/invites`, {
-            headers: { "Authorization": `Bearer ${token}` }
-        });
-        return response.data;
-    } catch (error) {
-        console.error("Error fetching invites:", error);
-        return [];
-    }
+    const response = await apiClient.get("/groups/invites");
+    return response.data;
 };
 
 export const acceptInvite = async (inviteId) => {
-    const token = localStorage.getItem("jwt_token");
-    const response = await axios.post(
-        `${API_URL}/groups/invites/${inviteId}/accept`,
-        {},
-        { headers: { "Authorization": `Bearer ${token}` } }
-    );
+    const response = await apiClient.post(`/groups/invites/${inviteId}/accept`, {});
     return response.data;
 };
 
 export const rejectInvite = async (inviteId) => {
-    const token = localStorage.getItem("jwt_token");
-    const response = await axios.post(
-        `${API_URL}/groups/invites/${inviteId}/reject`,
-        {},
-        { headers: { "Authorization": `Bearer ${token}` } }
-    );
+    const response = await apiClient.post(`/groups/invites/${inviteId}/reject`, {});
     return response.data;
 };

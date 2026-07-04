@@ -7,6 +7,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import PublicRoute from "./components/PublicRoute";
 import InvitationsPanel from "./components/InvitationsPanel";
 import { useAuth } from "./services/useAuth";
+import { clearAuthAndRedirect } from "./services/api";
 
 /** Navbar shown only to authenticated users */
 function AppNav() {
@@ -14,9 +15,7 @@ function AppNav() {
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    localStorage.removeItem("jwt_token");
-    localStorage.removeItem("user");
-    navigate("/login");
+    clearAuthAndRedirect();
   };
 
   return (
