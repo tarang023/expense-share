@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, Navigate } from "react-router-dom";
 import { addMemberToGroup, getGroupDetails, getSettlements, recordSettlement, addGroupExpense, inviteUserToGroup } from "../services/api"; 
 import AddExpenseModal from "../components/groups/AddExpenseModal"
 import InviteMemberModal from "../components/groups/InviteMemberModal";
@@ -19,12 +19,15 @@ const Dashboard = () => {
 
     
     useEffect(() => {
+        // ── Guard: abort fetch if groupId is missing (e.g. component rendered at "/") ──
+        // Without this, useParams() returns undefined and the URL becomes
+        // /groups/undefined/dashboard, causing a continuous "undefined" error on the backend.
+        if (!groupId) return;
+
         const fetchDashboardData = async () => {
             try {
                 const data = await getGroupDetails(groupId);
                 setGroupData(data);
-                
-                // We now use the simplified debts returned by getGroupDetails!
                 setSettlements(data.simplifiedDebts || []);
             } catch (err) {
                 setError("Failed to load group details.");
@@ -84,6 +87,10 @@ const Dashboard = () => {
             alert("Error recording settlement.");
         }
     };
+
+    // ── Safety redirect: Dashboard must always have a groupId from the URL ──
+    // If rendered at "/" (no :groupId param), bounce to /groups immediately.
+    if (!groupId) return <Navigate to="/groups" replace />;
 
     if (loading) return <div className="text-center mt-20">Loading Dashboard...</div>;
     if (error) return <div className="text-center mt-20 text-red-500">{error}</div>;

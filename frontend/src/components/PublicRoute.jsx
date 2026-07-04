@@ -1,22 +1,23 @@
 import { Navigate, Outlet } from "react-router-dom";
-import { isTokenValid } from "../services/useAuth";
+import { useAuth } from "../services/useAuth";
 
 /**
  * PublicRoute
  *
- * Wraps public-only routes (/login, /register). Redirects away if the user
- * already has a *valid* (non-expired) JWT – so a user with an expired token
- * is correctly allowed back to the login page instead of being bounced to /.
+ * Wraps public-only routes (/login, /register).
+ * If the user already has a valid session (cookie present + /me returns 200),
+ * redirect them away from the login page to the app.
  *
- * Usage in App.jsx:
- *   <Route element={<PublicRoute />}>
- *     <Route path="/login" element={<Login />} />
- *     <Route path="/register" element={<Register />} />
- *   </Route>
+ * Shows nothing while the /me check is in-flight (isLoading) to prevent
+ * a flicker where the login page shows briefly for an already-logged-in user.
  */
 function PublicRoute() {
-    const token = localStorage.getItem("jwt_token");
-    const isAuthenticated = token ? isTokenValid(token) : false;
+    const { isAuthenticated, isLoading } = useAuth();
+
+    if (isLoading) {
+        // Waiting for /me response — render nothing to avoid UI flicker
+        return null;
+    }
 
     return isAuthenticated ? <Navigate to="/" replace /> : <Outlet />;
 }

@@ -7,15 +7,16 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import PublicRoute from "./components/PublicRoute";
 import InvitationsPanel from "./components/InvitationsPanel";
 import { useAuth } from "./services/useAuth";
-import { clearAuthAndRedirect } from "./services/api";
+import { logoutUser } from "./services/api";
 
 /** Navbar shown only to authenticated users */
 function AppNav() {
-  const { username } = useAuth();
+  const { username, notifyLogout } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    clearAuthAndRedirect();
+    notifyLogout();  // Clears AuthContext state + broadcasts LOGOUT to other tabs
+    logoutUser();    // POSTs to /api/auth/logout → backend clears the HttpOnly cookie
   };
 
   return (
@@ -81,11 +82,12 @@ function App() {
           <Routes>
             {/* ── Private routes – require a valid JWT ── */}
             <Route element={<ProtectedRoute />}>
-              <Route path="/" element={<Dashboard />} />
+              {/* "/" → redirect to /groups; Dashboard only renders with a real groupId */}
+              <Route path="/" element={<Navigate to="/groups" replace />} />
               <Route path="/groups" element={<GroupManager />} />
               <Route path="/dashboard/:groupId" element={<Dashboard />} />
-              {/* Any unknown URL → redirect to home (still guarded by ProtectedRoute) */}
-              <Route path="*" element={<Navigate to="/" replace />} />
+              {/* Any unknown URL → redirect to /groups */}
+              <Route path="*" element={<Navigate to="/groups" replace />} />
             </Route>
 
             {/* ── Public routes – redirect away if already logged in ── */}

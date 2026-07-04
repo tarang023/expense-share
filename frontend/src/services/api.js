@@ -1,51 +1,32 @@
 import axios from "axios";
 
-
 const API_URL = import.meta.env.VITE_SPRING_BOOT_URL;
-console.log(API_URL); // Log the API URL to verify it's being read correctly
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
+// ── Global Axios instance ─────────────────────────────────────────────────────
+// withCredentials: true  →  the browser attaches the HttpOnly "jwt_token" cookie
+// on EVERY request automatically. No manual token management needed.
 
-/**
- * Remove every auth-related key from localStorage and redirect to /login.
- * Exported so the logout button can call it directly without duplicating logic.
- */
-export function clearAuthAndRedirect() {
-    localStorage.removeItem("jwt_token");
-    localStorage.removeItem("user");
-    window.location.href = "/login";
-}
+const apiClient = axios.create({
+    baseURL: API_URL,
+    withCredentials: true, // ← THE KEY FLAG: sends cookies cross-origin
+});
 
-// ── Shared Axios instance ─────────────────────────────────────────────────────
-
-const apiClient = axios.create({ baseURL: API_URL });
-
-/**
- * Request interceptor – automatically attaches the JWT Bearer token to every
- * outgoing request so individual API functions don't have to do it manually.
- */
-apiClient.interceptors.request.use(
-    (config) => {
-        const token = localStorage.getItem("jwt_token");
-        if (token) {
-            config.headers["Authorization"] = `Bearer ${token}`;
-        }
-        return config;
-    },
-    (error) => Promise.reject(error)
-);
-
-/**
- * Response interceptor – if the backend returns 401 Unauthorized or
- * 403 Forbidden the session is considered invalid.  We wipe localStorage and
- * hard-redirect to /login so no stale data can be seen.
- */
+// ── Response interceptor ──────────────────────────────────────────────────────
+// Redirect to /login on 401/403, EXCEPT for /auth/me.
+// A 401 from /auth/me simply means "no active session" — it is handled by
+// useAuth's catch block. Redirecting there would cause an infinite reload loop:
+//   getMe() → 401 → interceptor → window.location → reload → getMe() → 401 → ...
 apiClient.interceptors.response.use(
     (response) => response,
     (error) => {
         const status = error.response?.status;
-        if (status === 401 || status === 403) {
-            clearAuthAndRedirect();
+        const requestUrl = error.config?.url ?? "";
+
+        // Skip the redirect for /auth/me — useAuth handles its own 401
+        const isAuthCheck = requestUrl.includes("/auth/me");
+
+        if ((status === 401 || status === 403) && !isAuthCheck) {
+            window.location.href = "/login";
         }
         return Promise.reject(error);
     }
@@ -53,28 +34,44 @@ apiClient.interceptors.response.use(
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
 
+/**
+ * Login — POSTs credentials, backend sets the HttpOnly "jwt_token" cookie.
+ * The cookie is set by the browser automatically; we don't touch localStorage.
+ */
 export const loginUser = async (userData) => {
-    // Login does not need the auth header – use plain axios to avoid the
-    // interceptor attaching a potentially stale/invalid token.
-    const response = await axios.post(`${API_URL}/auth/login`, userData);
-    const data = response.data;
-    const token = data.token;
-    localStorage.setItem("jwt_token", token);
-    return data;
+    // withCredentials is set globally on apiClient, so the Set-Cookie header
+    // in the response will be honoured by the browser automatically.
+    const response = await apiClient.post("/auth/login", userData);
+    return response.data; // { message: "Login successful" }
 };
 
-export const registerUser = async (userData) => {
-    const response = await axios.post(`${API_URL}/users/register`, userData);
-    return response.data;
+/**
+ * Logout — tells the backend to overwrite the cookie with MaxAge=0,
+ * which instructs the browser to delete it immediately.
+ */
+export const logoutUser = async () => {
+    await apiClient.post("/auth/logout");
+    window.location.href = "/login";
+};
+
+/**
+ * Me — asks the server "who am I?".
+ * Since the JWT is HttpOnly, JavaScript cannot read it.
+ * This is the ONLY correct way to check auth state with cookie-based auth.
+ * Returns { username: "..." } on success, throws on 401.
+ */
+export const getMe = async () => {
+    const response = await apiClient.get("/auth/me");
+    return response.data; // { username: "..." }
 };
 
 export const sendOtp = async (data) => {
-    const response = await axios.post(`${API_URL}/auth/send-otp`, data);
+    const response = await apiClient.post("/auth/send-otp", data);
     return response.data;
 };
 
 export const registerUserWithOtp = async (userData) => {
-    const response = await axios.post(`${API_URL}/auth/register`, userData);
+    const response = await apiClient.post("/auth/register", userData);
     return response.data;
 };
 

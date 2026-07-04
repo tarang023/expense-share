@@ -1,32 +1,33 @@
 import { Navigate, Outlet } from "react-router-dom";
-import { isTokenValid } from "../services/useAuth";
-import { clearAuthAndRedirect } from "../services/api";
+import { useAuth } from "../services/useAuth";
 
 /**
  * ProtectedRoute
  *
- * Guards every private route. Performs two checks:
- *  1. Token existence  – if absent, redirect to /login.
- *  2. Token expiry     – decode the JWT's `exp` claim; if expired, wipe
- *                        localStorage and redirect to /login.
+ * Guards every private route by checking auth state with the server.
+ * Since the JWT lives in an HttpOnly cookie (invisible to JS), we call
+ * GET /api/auth/me and wait for the response before deciding where to navigate.
  *
- * Usage in App.jsx:
- *   <Route element={<ProtectedRoute />}>
- *     <Route path="/" element={<Dashboard />} />
- *     ...
- *   </Route>
+ * States:
+ *   isLoading = true  → Show a spinner; don't redirect yet (avoids false /login flash)
+ *   isAuthenticated   → Render the child route via <Outlet />
+ *   not authenticated → Redirect to /login
  */
 function ProtectedRoute() {
-    const token = localStorage.getItem("jwt_token");
+    const { isAuthenticated, isLoading } = useAuth();
 
-    if (!token) {
-        return <Navigate to="/login" replace />;
+    if (isLoading) {
+        // Waiting for the /me response — render nothing (or a spinner)
+        // to avoid a premature redirect to /login.
+        return (
+            <div className="flex items-center justify-center min-h-screen bg-gray-50">
+                <div className="text-gray-500 text-sm animate-pulse">Checking session…</div>
+            </div>
+        );
     }
 
-    if (!isTokenValid(token)) {
-        // Token exists but is expired – clear everything and send to login.
-        clearAuthAndRedirect();
-        return null; // clearAuthAndRedirect performs a hard redirect; this is a safety fallback.
+    if (!isAuthenticated) {
+        return <Navigate to="/login" replace />;
     }
 
     return <Outlet />;

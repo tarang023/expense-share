@@ -1,9 +1,11 @@
 package com.expense.demo.config;
+
 import com.expense.demo.service.JWTService;
 import com.expense.demo.service.MyUserDetailsService;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +18,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Arrays;
+
 @Component
 public class JWTFilter extends OncePerRequestFilter {
 
@@ -26,47 +30,49 @@ public class JWTFilter extends OncePerRequestFilter {
     ApplicationContext context;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+            throws ServletException, IOException {
 
-        String authHeader = request.getHeader("Authorization");
         String token = null;
         String username = null;
 
-        
-        
-        
-        
-        
-
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            System.out.println("here");
-            token = authHeader.substring(7);
-            username = jwtService.extractUserName(token);
+        // ── Extract JWT from HttpOnly cookie instead of Authorization header ──
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            token = Arrays.stream(cookies)
+                    .filter(c -> "jwt_token".equals(c.getName()))
+                    .map(Cookie::getValue)
+                    .findFirst()
+                    .orElse(null);
         }
 
-        
-        
-        
-
-            if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-        
-        UserDetails userDetails = context.getBean(MyUserDetailsService.class).loadUserByUsername(username);
-        System.out.println("1. User found in DB: " + userDetails.getUsername());
-
-        if (jwtService.validateToken(token, userDetails)) {
-            System.out.println("2. Token is VALID! Setting Security Context..."); 
-
-            UsernamePasswordAuthenticationToken authToken = 
-                new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-            
-            authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-            SecurityContextHolder.getContext().setAuthentication(authToken);
-            
-            System.out.println("3. User is now Authenticated in Spring Security");
-        } else {
-            System.out.println(" Token Validation FAILED for user: " + username);
+        if (token != null) {
+            try {
+                username = jwtService.extractUserName(token);
+            } catch (Exception e) {
+                System.out.println("JWT cookie parsing failed: " + e.getMessage());
+            }
         }
-    }
+
+        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+
+            UserDetails userDetails = context.getBean(MyUserDetailsService.class).loadUserByUsername(username);
+            System.out.println("1. User found in DB: " + userDetails.getUsername());
+
+            if (jwtService.validateToken(token, userDetails)) {
+                System.out.println("2. Token is VALID! Setting Security Context...");
+
+                UsernamePasswordAuthenticationToken authToken =
+                        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+
+                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                SecurityContextHolder.getContext().setAuthentication(authToken);
+
+                System.out.println("3. User is now Authenticated in Spring Security");
+            } else {
+                System.out.println("Token Validation FAILED for user: " + username);
+            }
+        }
 
         filterChain.doFilter(request, response);
     }

@@ -1,14 +1,16 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { loginUser } from "../services/api"; 
+import { loginUser } from "../services/api";
+import { useAuth } from "../services/useAuth";
 
 const Login = () => {
     const [formData, setFormData] = useState({
         username: "",
         password: ""
     });
-    
+
     const navigate = useNavigate();
+    const { notifyLogin } = useAuth();
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -17,12 +19,10 @@ const Login = () => {
     const handleLogin = async (e) => {
         e.preventDefault();
         try {
-            
-            const user = await loginUser(formData);
-            
-            
-            localStorage.setItem("user", JSON.stringify(user));
-            
+            await loginUser(formData);
+            // Cookie is set by the backend automatically.
+            // Notify the AuthContext (and all other open tabs) about the new login.
+            notifyLogin(formData.username);
             navigate("/groups");
         } catch (error) {
             console.error(error);

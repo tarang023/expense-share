@@ -15,9 +15,16 @@ export default function InvitationsPanel() {
 
     const load = async () => {
         setLoading(true);
-        const data = await getPendingInvites();
-        setInvites(data);
-        setLoading(false);
+        try {
+            const data = await getPendingInvites();
+            setInvites(data);
+        } catch {
+            // Silently ignore errors (e.g. 401 while auth cookie is still loading).
+            // The 30-second poll will retry automatically.
+            setInvites([]);
+        } finally {
+            setLoading(false);
+        }
     };
 
     useEffect(() => {
