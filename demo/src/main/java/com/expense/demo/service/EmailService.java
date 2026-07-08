@@ -33,9 +33,12 @@ public class EmailService {
             message.setFrom(senderEmail);
         }
 
+        System.out.println("sending OTP to email: " + to);
+
         message.setTo(to);
         message.setSubject("Your Registration OTP");
         message.setText("Your OTP code is: " + otp);
+        System.out.println(message);
 
         javaMailSender.send(message);
     }
