@@ -36,8 +36,6 @@ public class GroupService {
     @Autowired
     private GroupInvitationRepository invitationRepository;
 
-    // ── Existing helpers ─────────────────────────────────────────────────────
-
     @SuppressWarnings("null")
     public ExpenseGroup findById(Long groupId) {
         return groupRepo.findById(groupId)
@@ -95,7 +93,6 @@ public class GroupService {
         ExpenseGroup group = groupRepo.findById(groupId)
                 .orElseThrow(() -> new RuntimeException("Group not found with ID: " + groupId));
 
-        // Payer is always the authenticated user — ignoring any paidBy in the DTO
         User paidBy = userRepository.findByUsername(paidByUsername);
         if (paidBy == null) {
             throw new RuntimeException("Authenticated user not found: " + paidByUsername);
@@ -130,12 +127,6 @@ public class GroupService {
         return expenseDto;
     }
 
-    // ── Invitation methods ────────────────────────────────────────────────────
-
-    /**
-     * Creates a PENDING invitation from inviterUsername to inviteeUsername for groupId.
-     * Guards: invitee must exist, invitee must not already be a member, no duplicate PENDING invite.
-     */
     @Transactional
     @SuppressWarnings("null")
     public InvitationDto sendInvite(Long groupId, String inviterUsername, String inviteeUsername) {
@@ -147,7 +138,6 @@ public class GroupService {
             throw new RuntimeException("Inviter not found: " + inviterUsername);
         }
 
-        // Only group members can send invites
         boolean inviterIsMember = group.getMembers().stream()
                 .anyMatch(m -> m.getUsername().equals(inviterUsername));
         if (!inviterIsMember) {
@@ -159,14 +149,12 @@ public class GroupService {
             throw new RuntimeException("User not found: " + inviteeUsername);
         }
 
-        // Guard: already a member
         boolean alreadyMember = group.getMembers().stream()
                 .anyMatch(m -> m.getId().equals(invitee.getId()));
         if (alreadyMember) {
             throw new RuntimeException(inviteeUsername + " is already a member of this group.");
         }
 
-        // Guard: duplicate pending invite
         boolean pendingExists = invitationRepository
                 .existsByGroup_IdAndInvitee_IdAndStatus(groupId, invitee.getId(), InvitationStatus.PENDING);
         if (pendingExists) {
@@ -184,9 +172,6 @@ public class GroupService {
         return toDto(saved);
     }
 
-    /**
-     * Returns all PENDING invitations for the authenticated user.
-     */
     public List<InvitationDto> getPendingInvites(String username) {
         User user = userRepository.findByUsername(username);
         if (user == null) {
@@ -199,9 +184,6 @@ public class GroupService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Accepts the invitation: sets status to ACCEPTED and adds the invitee to the group.
-     */
     @Transactional
     public InvitationDto acceptInvite(Long inviteId, String username) {
         GroupInvitation invitation = getInvitationForUser(inviteId, username);
@@ -216,9 +198,6 @@ public class GroupService {
         return toDto(invitation);
     }
 
-    /**
-     * Rejects the invitation: sets status to REJECTED only.
-     */
     @Transactional
     public InvitationDto rejectInvite(Long inviteId, String username) {
         GroupInvitation invitation = getInvitationForUser(inviteId, username);
@@ -227,9 +206,6 @@ public class GroupService {
         return toDto(invitation);
     }
 
-    // ── Private helpers ───────────────────────────────────────────────────────
-
-    /** Loads an invitation and verifies it is PENDING and belongs to the given user. */
     @SuppressWarnings("null")
     private GroupInvitation getInvitationForUser(Long inviteId, String username) {
         GroupInvitation invitation = invitationRepository.findById(inviteId)
@@ -244,7 +220,6 @@ public class GroupService {
         return invitation;
     }
 
-    /** Maps a GroupInvitation entity to a flat InvitationDto. */
     private InvitationDto toDto(GroupInvitation inv) {
         return new InvitationDto(
                 inv.getId(),
@@ -257,4 +232,3 @@ public class GroupService {
         );
     }
 }
-

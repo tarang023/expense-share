@@ -146,13 +146,6 @@ public class GroupController {
         return ResponseEntity.ok(savedExpense);
     }
 
-    // ── Invitation endpoints ──────────────────────────────────────────────────
-
-    /**
-     * POST /api/groups/{groupId}/invite
-     * Body: { "username": "target_user" }
-     * Sends a PENDING invitation from the authenticated user to the target.
-     */
     @PostMapping("/{groupId}/invite")
     public ResponseEntity<?> sendInvite(
             @PathVariable Long groupId,
@@ -167,10 +160,6 @@ public class GroupController {
         }
     }
 
-    /**
-     * GET /api/groups/invites
-     * Returns all PENDING invitations for the authenticated user.
-     */
     @GetMapping("/invites")
     public ResponseEntity<List<InvitationDto>> getPendingInvites(
             @AuthenticationPrincipal UserDetails currentUser) {
@@ -178,10 +167,6 @@ public class GroupController {
         return ResponseEntity.ok(invites);
     }
 
-    /**
-     * POST /api/groups/invites/{inviteId}/accept
-     * Accepts the invitation and joins the group.
-     */
     @PostMapping("/invites/{inviteId}/accept")
     public ResponseEntity<?> acceptInvite(
             @PathVariable Long inviteId,
@@ -194,10 +179,6 @@ public class GroupController {
         }
     }
 
-    /**
-     * POST /api/groups/invites/{inviteId}/reject
-     * Rejects the invitation without joining the group.
-     */
     @PostMapping("/invites/{inviteId}/reject")
     public ResponseEntity<?> rejectInvite(
             @PathVariable Long inviteId,

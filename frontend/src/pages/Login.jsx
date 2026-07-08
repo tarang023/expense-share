@@ -20,8 +20,6 @@ const Login = () => {
         e.preventDefault();
         try {
             await loginUser(formData);
-            // Cookie is set by the backend automatically.
-            // Notify the AuthContext (and all other open tabs) about the new login.
             notifyLogin(formData.username);
             navigate("/groups");
         } catch (error) {

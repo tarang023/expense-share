@@ -19,9 +19,6 @@ const Dashboard = () => {
 
     
     useEffect(() => {
-        // ── Guard: abort fetch if groupId is missing (e.g. component rendered at "/") ──
-        // Without this, useParams() returns undefined and the URL becomes
-        // /groups/undefined/dashboard, causing a continuous "undefined" error on the backend.
         if (!groupId) return;
 
         const fetchDashboardData = async () => {
@@ -40,25 +37,19 @@ const Dashboard = () => {
     }, [groupId]);
 
     
-
-    
     const handleAddExpense = async (newExpense) => {
-        
         const optimisticExpense = {
             ...newExpense,
             id: Date.now(),
             date: new Date().toISOString()
         };
 
-        
         setGroupData((prev) => ({
             ...prev,
             expenses: [optimisticExpense, ...(prev.expenses || [])]
         }));
 
         await addGroupExpense(groupId, newExpense);
-
-
     };
 
     
@@ -67,8 +58,6 @@ const Dashboard = () => {
         alert(`Invite sent to ${username}!`);
 
         await inviteUserToGroup(groupData.groupId, username)
-
-        
     };
 
     
@@ -77,8 +66,6 @@ const Dashboard = () => {
             await recordSettlement(groupId, transaction);
             alert("Settlement recorded successfully!");
 
-            
-            // Refresh group data which now includes simplifiedDebts
             const newData = await getGroupDetails(groupId);
             
             setGroupData(newData);
@@ -88,8 +75,6 @@ const Dashboard = () => {
         }
     };
 
-    // ── Safety redirect: Dashboard must always have a groupId from the URL ──
-    // If rendered at "/" (no :groupId param), bounce to /groups immediately.
     if (!groupId) return <Navigate to="/groups" replace />;
 
     if (loading) return <div className="text-center mt-20">Loading Dashboard...</div>;
@@ -103,7 +88,6 @@ const Dashboard = () => {
         <div className="min-h-screen bg-gray-50 p-6">
             <div className="max-w-6xl mx-auto">
 
-                {}
                 <div className="flex justify-between items-center mb-8">
                     <div>
                         <h1 className="text-3xl font-bold text-gray-800">{groupData.groupName}</h1>
@@ -116,16 +100,13 @@ const Dashboard = () => {
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-                    {}
                     <div className="space-y-6">
 
-                        {}
                         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
                             <h3 className="text-gray-500 text-sm font-semibold uppercase">Total Spending</h3>
                             <p className="text-4xl font-bold text-indigo-600 mt-2">₹{totalExpense}</p>
                         </div>
 
-                        {}
                         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
                             <h3 className="text-lg font-bold text-gray-800 mb-4">Members</h3>
                             <div className="space-y-3">
@@ -143,7 +124,6 @@ const Dashboard = () => {
                                 )}
                             </div>
 
-                            {}
                             <button
                                 onClick={() => setInviteModalOpen(true)}
                                 className="w-full mt-6 py-2 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-indigo-500 hover:text-indigo-600 transition text-sm font-medium"
@@ -153,13 +133,11 @@ const Dashboard = () => {
                         </div>
                     </div>
 
-                    {}
                     <div className="lg:col-span-2">
                         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                             <div className="p-6 border-b border-gray-100 flex justify-between items-center">
                                 <h3 className="text-lg font-bold text-gray-800">Recent Expenses</h3>
 
-                                {}
                                 <button
                                     onClick={() => setExpenseModalOpen(true)}
                                     className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-indigo-700 shadow-sm"
@@ -196,7 +174,6 @@ const Dashboard = () => {
                             </div>
                         </div>
 
-                        {}
                         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mt-8">
                             <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-indigo-50">
                                 <h3 className="text-lg font-bold text-indigo-900">Settlements (Who owes who)</h3>
@@ -259,7 +236,6 @@ const Dashboard = () => {
                 </div>
             </div>
 
-            {}
             <AddExpenseModal
                 isOpen={isExpenseModalOpen}
                 onClose={() => setExpenseModalOpen(false)}

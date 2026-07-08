@@ -1,12 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { getPendingInvites, acceptInvite, rejectInvite } from "../services/api";
 
-/**
- * InvitationsPanel
- * A bell icon in the navbar. Clicking it opens a dropdown listing all
- * PENDING invitations for the logged-in user. Each row has Accept / Reject
- * buttons that call the backend and refresh the list.
- */
 export default function InvitationsPanel() {
     const [invites, setInvites] = useState([]);
     const [open, setOpen] = useState(false);
@@ -19,8 +13,6 @@ export default function InvitationsPanel() {
             const data = await getPendingInvites();
             setInvites(data);
         } catch {
-            // Silently ignore errors (e.g. 401 while auth cookie is still loading).
-            // The 30-second poll will retry automatically.
             setInvites([]);
         } finally {
             setLoading(false);
@@ -29,12 +21,10 @@ export default function InvitationsPanel() {
 
     useEffect(() => {
         load();
-        // poll every 30 s so new invites appear without a page refresh
         const interval = setInterval(load, 30000);
         return () => clearInterval(interval);
     }, []);
 
-    // close panel when clicking outside
     useEffect(() => {
         const handleClickOutside = (e) => {
             if (panelRef.current && !panelRef.current.contains(e.target)) {
@@ -65,7 +55,6 @@ export default function InvitationsPanel() {
 
     return (
         <div className="relative" ref={panelRef}>
-            {/* ── Bell button ── */}
             <button
                 id="invitations-bell"
                 onClick={() => setOpen((o) => !o)}
@@ -77,7 +66,6 @@ export default function InvitationsPanel() {
                     <path strokeLinecap="round" strokeLinejoin="round"
                         d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 00-5-5.917V4a1 1 0 10-2 0v1.083A6 6 0 006 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                 </svg>
-                {/* Badge */}
                 {invites.length > 0 && (
                     <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold
                                      rounded-full w-5 h-5 flex items-center justify-center">
@@ -86,7 +74,6 @@ export default function InvitationsPanel() {
                 )}
             </button>
 
-            {/* ── Dropdown panel ── */}
             {open && (
                 <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-2xl border
                                 border-gray-100 z-50 overflow-hidden">

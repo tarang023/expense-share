@@ -37,7 +37,6 @@ public class JWTFilter extends OncePerRequestFilter {
         String token = null;
         String username = null;
 
-        // ── Extract JWT from HttpOnly cookie instead of Authorization header ──
         Cookie[] cookies = request.getCookies();
         if (cookies != null) {
             token = Arrays.stream(cookies)

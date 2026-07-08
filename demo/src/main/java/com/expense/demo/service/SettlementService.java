@@ -35,7 +35,6 @@ public class SettlementService {
 
     @SuppressWarnings("null")
     public List<SimplifiedDebtDto> calculateSimplifiedDebts(Long groupId) {
-        // Step A: Net Balances
         Map<Long, Double> balances = new HashMap<>();
         List<Expense> expenses = expenseRepo.findByGroupId(groupId);
 
@@ -48,7 +47,6 @@ public class SettlementService {
             }
         }
 
-        // Step B: Split into debtors and creditors
         PriorityQueue<Map.Entry<Long, Double>> debtors = new PriorityQueue<>(Map.Entry.comparingByValue());
         PriorityQueue<Map.Entry<Long, Double>> creditors = new PriorityQueue<>((a, b) -> Double.compare(b.getValue(), a.getValue()));
 
@@ -59,7 +57,6 @@ public class SettlementService {
 
         List<SimplifiedDebtDto> simplifiedDebts = new ArrayList<>();
 
-        // Step C: Greedy Match
         while (!debtors.isEmpty() && !creditors.isEmpty()) {
             var debtorEntry = debtors.poll();
             var creditorEntry = creditors.poll();
@@ -153,7 +150,6 @@ public class SettlementService {
         User payee = userRepo.findById(transaction.getCreditorId())
                 .orElseThrow(() -> new RuntimeException("Creditor not found: " + transaction.getCreditorId()));
 
-        // Record the settlement as an expense paid by the debtor
         Expense settlementExpense = new Expense();
         settlementExpense.setAmount(transaction.getAmount());
         settlementExpense.setDescription("Settlement: " + payer.getUsername() + " → " + payee.getUsername());
@@ -162,8 +158,6 @@ public class SettlementService {
         settlementExpense.setPaidBy(payer);
         Expense savedExpense = expenseRepo.save(settlementExpense);
 
-        // The creditor (payee) "owes" the full amount — this cancels the original debt
-        // FIX: save split directly instead of via immutable List.of()
         ExpenseSplit split = new ExpenseSplit();
         split.setExpense(savedExpense);
         split.setUser(payee);

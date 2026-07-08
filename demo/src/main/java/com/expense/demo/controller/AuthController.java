@@ -23,13 +23,8 @@ import java.util.List;
 @CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
 public class AuthController {
 
-    // JWT expiry MUST match JWTService.generateToken() expiration millis:
-    // 60 * 60 * 30 * 30 ms = 27,000 seconds
     private static final int JWT_EXPIRY_SECONDS = 60 * 60 * 30 * 30 / 1000;
 
-    // true on Render (prod), false on localhost (dev)
-    // In dev: Secure=false + SameSite=Lax so the browser accepts cookies over HTTP.
-    // In prod: Secure=true + SameSite=None required for cross-origin HTTPS.
     @Value("${app.cookie.secure:false}")
     private boolean secureCookie;
 
@@ -70,8 +65,20 @@ public class AuthController {
             return ResponseEntity.status(400).body(Map.of("error", "Invalid OTP"));
         }
 
+        User newUser = new User();
+        newUser.setName(request.getName());
+        newUser.setUsername(request.getUsername());
+        newUser.setEmail(request.getEmail());
+        newUser.setPassword(request.getPassword());
+
+        try {
+            service.register(newUser);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("error", "Failed to register user. Username or email may already exist."));
+        }
+
         otpService.clearOtp(email);
-        return ResponseEntity.ok(Map.of("message", "User registered successfully", "userId", "12345"));
+        return ResponseEntity.ok(Map.of("message", "User registered successfully"));
     }
 
     @GetMapping("/otp-requests")
@@ -79,10 +86,6 @@ public class AuthController {
         return otpService.getAllOtpRequests();
     }
 
-    // ── /me — returns the logged-in username so the frontend can verify auth ──
-    // The JWT is in an HttpOnly cookie; JS can't read it, so we ask the server.
-    // Spring Security's JWTFilter already validated the cookie and populated
-    // the SecurityContext before this method is ever called.
     @GetMapping("/me")
     public ResponseEntity<?> me() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -102,9 +105,9 @@ public class AuthController {
         }
 
         Cookie jwtCookie = new Cookie("jwt_token", token);
-        jwtCookie.setHttpOnly(true);                        // Inaccessible to JS — blocks XSS
-        jwtCookie.setSecure(secureCookie);                  // true in prod (HTTPS), false in dev (HTTP)
-        jwtCookie.setAttribute("SameSite", secureCookie ? "None" : "Lax"); // None requires Secure=true
+        jwtCookie.setHttpOnly(true);
+        jwtCookie.setSecure(secureCookie);
+        jwtCookie.setAttribute("SameSite", secureCookie ? "None" : "Lax");
         jwtCookie.setPath("/");
         jwtCookie.setMaxAge(JWT_EXPIRY_SECONDS);
 
@@ -112,7 +115,6 @@ public class AuthController {
         return ResponseEntity.ok(Map.of("message", "Login successful"));
     }
 
-    // ── Logout — overwrite cookie with MaxAge=0 to clear it ─────────────────
     @PostMapping("/logout")
     public ResponseEntity<?> logout(HttpServletResponse response) {
         Cookie expiredCookie = new Cookie("jwt_token", null);
@@ -120,7 +122,7 @@ public class AuthController {
         expiredCookie.setSecure(secureCookie);
         expiredCookie.setAttribute("SameSite", secureCookie ? "None" : "Lax");
         expiredCookie.setPath("/");
-        expiredCookie.setMaxAge(0); // Browser deletes cookie immediately
+        expiredCookie.setMaxAge(0);
 
         response.addCookie(expiredCookie);
         return ResponseEntity.ok(Map.of("message", "Logged out successfully"));
@@ -129,12 +131,15 @@ public class AuthController {
 
 
 class RegisterRequest {
-    @SuppressWarnings("unused") private String name;
-    @SuppressWarnings("unused") private String username;
+    private String name;
+    private String username;
     private String email;
-    @SuppressWarnings("unused") private String password;
+    private String password;
     private String otp;
 
+    public String getName() { return name; }
+    public String getUsername() { return username; }
     public String getEmail() { return email; }
+    public String getPassword() { return password; }
     public String getOtp() { return otp; }
 }

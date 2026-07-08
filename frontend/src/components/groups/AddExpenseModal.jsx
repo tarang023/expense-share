@@ -20,7 +20,6 @@ const AddExpenseModal = ({ isOpen, onClose, onAddExpense }) => {
             description: formData.description,
             amount: parseFloat(formData.amount),
             date: new Date().toISOString(),
-            // paidBy is intentionally omitted — the backend uses the JWT principal
         });
 
         setIsSubmitting(false);
@@ -37,7 +36,6 @@ const AddExpenseModal = ({ isOpen, onClose, onAddExpense }) => {
                 </div>
 
                 <form onSubmit={handleSubmit} className="p-6 space-y-4">
-                    {/* Description */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
                         <input
@@ -50,7 +48,6 @@ const AddExpenseModal = ({ isOpen, onClose, onAddExpense }) => {
                         />
                     </div>
 
-                    {/* Amount */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Amount (₹)</label>
                         <input
@@ -65,7 +62,6 @@ const AddExpenseModal = ({ isOpen, onClose, onAddExpense }) => {
                         />
                     </div>
 
-                    {/* Paid by — auto from JWT, shown as read-only badge */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Paid By</label>
                         <div className="flex items-center gap-2 px-4 py-2 bg-indigo-50 border border-indigo-200
@@ -76,7 +72,6 @@ const AddExpenseModal = ({ isOpen, onClose, onAddExpense }) => {
                         </div>
                     </div>
 
-                    {/* Actions */}
                     <div className="pt-4 flex gap-3">
                         <button
                             type="button"

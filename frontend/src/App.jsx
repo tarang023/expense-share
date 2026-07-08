@@ -9,14 +9,13 @@ import InvitationsPanel from "./components/InvitationsPanel";
 import { useAuth } from "./services/useAuth";
 import { logoutUser } from "./services/api";
 
-/** Navbar shown only to authenticated users */
 function AppNav() {
   const { username, notifyLogout } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    notifyLogout();  // Clears AuthContext state + broadcasts LOGOUT to other tabs
-    logoutUser();    // POSTs to /api/auth/logout → backend clears the HttpOnly cookie
+    notifyLogout();
+    logoutUser();
   };
 
   return (
@@ -30,17 +29,14 @@ function AppNav() {
         </button>
 
         <div className="flex items-center gap-4">
-          {/* Invitations bell */}
           <InvitationsPanel />
 
-          {/* Username pill */}
           {username && (
             <span className="text-sm bg-white/10 px-3 py-1 rounded-full font-medium">
               👤 {username}
             </span>
           )}
 
-          {/* Logout */}
           <button
             id="logout-btn"
             onClick={handleLogout}
@@ -54,7 +50,6 @@ function AppNav() {
   );
 }
 
-/** Public navbar (no user info, no bell) */
 function PublicNav() {
   return (
     <nav className="bg-slate-900 text-white shadow-md">
@@ -65,7 +60,6 @@ function PublicNav() {
   );
 }
 
-/** Wrapper that picks the right nav based on auth state */
 function NavBar() {
   const location = useLocation();
   const isPublicPage = ["/login", "/register"].includes(location.pathname);
@@ -80,17 +74,13 @@ function App() {
 
         <main>
           <Routes>
-            {/* ── Private routes – require a valid JWT ── */}
             <Route element={<ProtectedRoute />}>
-              {/* "/" → redirect to /groups; Dashboard only renders with a real groupId */}
               <Route path="/" element={<Navigate to="/groups" replace />} />
               <Route path="/groups" element={<GroupManager />} />
               <Route path="/dashboard/:groupId" element={<Dashboard />} />
-              {/* Any unknown URL → redirect to /groups */}
               <Route path="*" element={<Navigate to="/groups" replace />} />
             </Route>
 
-            {/* ── Public routes – redirect away if already logged in ── */}
             <Route element={<PublicRoute />}>
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />

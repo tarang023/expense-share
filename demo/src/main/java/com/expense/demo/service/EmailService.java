@@ -28,7 +28,7 @@ public class EmailService {
         if (senderEmail == null) {
             System.err.println("CRITICAL ERROR: senderEmail is NULL. Check application.properties.");
             
-            message.setFrom("YOUR_REAL_EMAIL@gmail.com"); 
+            message.setFrom("YOUR_REAL_EMAIL@gmail.com");
         } else {
             message.setFrom(senderEmail);
         }

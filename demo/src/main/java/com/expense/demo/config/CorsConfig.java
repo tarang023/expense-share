@@ -17,9 +17,9 @@ public class CorsConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-      System.out.println("Allowed Origins: " + allowedOriginsString); // Debugging line to check the origins
+      System.out.println("Allowed Origins: " + allowedOriginsString);
    
-        configuration.setAllowedOrigins(Arrays.asList(allowedOriginsString.split(","))); 
+        configuration.setAllowedOrigins(Arrays.asList(allowedOriginsString.split(",")));
         
         
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
@@ -28,10 +28,10 @@ public class CorsConfig {
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
         
         
-        configuration.setAllowCredentials(true); 
+        configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration); 
+        source.registerCorsConfiguration("/**", configuration);
         return source;
     }
 }
