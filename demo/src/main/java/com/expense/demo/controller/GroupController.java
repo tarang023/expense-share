@@ -97,6 +97,7 @@ public class GroupController {
     }
 
     @GetMapping("/{groupId}/dashboard")
+    @SuppressWarnings("null")
     public ResponseEntity<GroupDetailDto> getGroupDashboard(
             @PathVariable Long groupId,
             @AuthenticationPrincipal UserDetails currentUser) {

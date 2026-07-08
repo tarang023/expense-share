@@ -33,6 +33,7 @@ public class SettlementService {
         this.groupRepo = groupRepo;
     }
 
+    @SuppressWarnings("null")
     public List<SimplifiedDebtDto> calculateSimplifiedDebts(Long groupId) {
         // Step A: Net Balances
         Map<Long, Double> balances = new HashMap<>();
@@ -137,6 +138,7 @@ public class SettlementService {
     }
 
     @Transactional
+    @SuppressWarnings("null")
     public void recordSettlement(Long groupId, SettlementTransaction transaction, String authenticatedUsername) {
         ExpenseGroup group = groupRepo.findById(groupId)
                 .orElseThrow(() -> new RuntimeException("Group not found"));

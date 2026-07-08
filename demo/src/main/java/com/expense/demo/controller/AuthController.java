@@ -1,6 +1,5 @@
 package com.expense.demo.controller;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -8,7 +7,6 @@ import org.springframework.web.bind.annotation.*;
 
 import com.expense.demo.service.AuthService;
 import com.expense.demo.service.EmailService;
-import com.expense.demo.service.JWTService;
 import com.expense.demo.service.OtpService;
 import com.expense.demo.model.OtpRequest;
 import com.expense.demo.model.User;
@@ -40,9 +38,6 @@ public class AuthController {
 
     @Autowired
     private AuthService service;
-
-    @Autowired
-    private JWTService jwtService;
 
     @Autowired
     private OtpService otpService;
@@ -134,10 +129,10 @@ public class AuthController {
 
 
 class RegisterRequest {
-    private String name;
-    private String username;
+    @SuppressWarnings("unused") private String name;
+    @SuppressWarnings("unused") private String username;
     private String email;
-    private String password;
+    @SuppressWarnings("unused") private String password;
     private String otp;
 
     public String getEmail() { return email; }

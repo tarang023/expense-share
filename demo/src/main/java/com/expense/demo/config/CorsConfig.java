@@ -1,15 +1,10 @@
 package com.expense.demo.config;
-
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.cors.CorsConfigurationSource;
-import java.util.stream.Stream;
-import java.util.Objects;
-
 import java.util.Arrays;
-import java.util.List;
 import org.springframework.beans.factory.annotation.Value;
 
 @Configuration
@@ -22,9 +17,6 @@ public class CorsConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-
-        
-    
       System.out.println("Allowed Origins: " + allowedOriginsString); // Debugging line to check the origins
    
         configuration.setAllowedOrigins(Arrays.asList(allowedOriginsString.split(","))); 

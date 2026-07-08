@@ -1,8 +1,6 @@
 package com.expense.demo.service;
 import java.util.List;
 import java.util.Random;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -35,10 +33,12 @@ public class OtpService {
     public List<OtpRequest> getAllOtpRequests() {
          return otpRequestRepository.findAll();
     }
+    @SuppressWarnings("null")
     public OtpRequest findBy(String email) {
         return otpRequestRepository.findById(email).orElse(null);
     }
 
+    @SuppressWarnings("null")
     public void clearOtp(String email) {
         otpRequestRepository.deleteById(email);
     }

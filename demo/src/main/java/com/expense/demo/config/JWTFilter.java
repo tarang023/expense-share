@@ -19,6 +19,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.Arrays;
+import org.springframework.lang.NonNull;
 
 @Component
 public class JWTFilter extends OncePerRequestFilter {
@@ -30,7 +31,7 @@ public class JWTFilter extends OncePerRequestFilter {
     ApplicationContext context;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+    protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain)
             throws ServletException, IOException {
 
         String token = null;
@@ -41,7 +42,7 @@ public class JWTFilter extends OncePerRequestFilter {
         if (cookies != null) {
             token = Arrays.stream(cookies)
                     .filter(c -> "jwt_token".equals(c.getName()))
-                    .map(Cookie::getValue)
+                    .map(c -> c.getValue())
                     .findFirst()
                     .orElse(null);
         }

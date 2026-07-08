@@ -1,7 +1,6 @@
 package com.expense.demo.dto;
 
 import com.expense.demo.model.InvitationStatus;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 

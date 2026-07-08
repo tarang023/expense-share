@@ -38,19 +38,23 @@ public class GroupService {
 
     // ── Existing helpers ─────────────────────────────────────────────────────
 
+    @SuppressWarnings("null")
     public ExpenseGroup findById(Long groupId) {
         return groupRepo.findById(groupId)
                 .orElseThrow(() -> new RuntimeException("Group not found with ID: " + groupId));
     }
 
+    @SuppressWarnings("null")
     public ExpenseGroup saveGroup(ExpenseGroup group) {
         return groupRepo.save(group);
     }
 
+    @SuppressWarnings("null")
     public List<ExpenseGroup> getAllGroups(Long userId) {
         return groupRepo.findByMembers_Id(userId);
     }
 
+    @SuppressWarnings("null")
     public ExpenseGroup createGroup(Long creatorId, String name) {
         User creator = userRepository.findById(creatorId)
                 .orElseThrow(() -> new RuntimeException("User not found with ID: " + creatorId));
@@ -62,6 +66,7 @@ public class GroupService {
         return groupRepo.save(newGroup);
     }
 
+    @SuppressWarnings("null")
     public ExpenseGroup addMemberByUsername(Long groupId, String usernameToAdd, String requesterUsername) {
         ExpenseGroup group = groupRepo.findById(groupId)
                 .orElseThrow(() -> new RuntimeException("Group not found"));
@@ -85,6 +90,7 @@ public class GroupService {
         return groupRepo.save(group);
     }
 
+    @SuppressWarnings("null")
     public ExpenseDto addExpense(Long groupId, ExpenseDto expenseDto, String paidByUsername) {
         ExpenseGroup group = groupRepo.findById(groupId)
                 .orElseThrow(() -> new RuntimeException("Group not found with ID: " + groupId));
@@ -131,6 +137,7 @@ public class GroupService {
      * Guards: invitee must exist, invitee must not already be a member, no duplicate PENDING invite.
      */
     @Transactional
+    @SuppressWarnings("null")
     public InvitationDto sendInvite(Long groupId, String inviterUsername, String inviteeUsername) {
         ExpenseGroup group = groupRepo.findById(groupId)
                 .orElseThrow(() -> new RuntimeException("Group not found with ID: " + groupId));
@@ -223,6 +230,7 @@ public class GroupService {
     // ── Private helpers ───────────────────────────────────────────────────────
 
     /** Loads an invitation and verifies it is PENDING and belongs to the given user. */
+    @SuppressWarnings("null")
     private GroupInvitation getInvitationForUser(Long inviteId, String username) {
         GroupInvitation invitation = invitationRepository.findById(inviteId)
                 .orElseThrow(() -> new RuntimeException("Invitation not found with ID: " + inviteId));
