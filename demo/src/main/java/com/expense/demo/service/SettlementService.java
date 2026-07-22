@@ -5,6 +5,7 @@ import com.expense.demo.model.ExpenseSplit;
 import com.expense.demo.model.SettlementTransaction;
 import com.expense.demo.repository.ExpenseRepository;
 import com.expense.demo.repository.ExpenseSplitRepository;
+import com.expense.demo.repository.UserBalanceProjection;
 import com.expense.demo.repository.UserRepository;
 import com.expense.demo.repository.ExpenseGroupRepository;
 import com.expense.demo.model.ExpenseGroup;
@@ -16,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class SettlementService {
@@ -35,24 +37,25 @@ public class SettlementService {
 
     @SuppressWarnings("null")
     public List<SimplifiedDebtDto> calculateSimplifiedDebts(Long groupId) {
-        Map<Long, Double> balances = new HashMap<>();
-        List<Expense> expenses = expenseRepo.findByGroupId(groupId);
 
-        for (Expense e : expenses) {
-            balances.put(e.getPaidBy().getId(), balances.getOrDefault(e.getPaidBy().getId(), 0.0) + e.getAmount());
+        List<UserBalanceProjection> dbBalances = expenseRepo.getGroupNetBalances(groupId);
 
-            List<ExpenseSplit> splits = splitRepo.findByExpenseId(e.getId());
-            for (ExpenseSplit s : splits) {
-                balances.put(s.getUser().getId(), balances.getOrDefault(s.getUser().getId(), 0.0) - s.getAmountOwed());
-            }
-        }
+        Map<Long, Double> balances = dbBalances.stream()
+                .collect(Collectors.toMap(UserBalanceProjection::getUserId, UserBalanceProjection::getNetBalance));
+
+        List<User> users = userRepo.findAllById(balances.keySet());
+        Map<Long, User> userMap = users.stream()
+                .collect(Collectors.toMap(User::getId, user -> user));
 
         PriorityQueue<Map.Entry<Long, Double>> debtors = new PriorityQueue<>(Map.Entry.comparingByValue());
-        PriorityQueue<Map.Entry<Long, Double>> creditors = new PriorityQueue<>((a, b) -> Double.compare(b.getValue(), a.getValue()));
+        PriorityQueue<Map.Entry<Long, Double>> creditors = new PriorityQueue<>(
+                (a, b) -> Double.compare(b.getValue(), a.getValue()));
 
         for (Map.Entry<Long, Double> entry : balances.entrySet()) {
-            if (entry.getValue() < -0.01) debtors.add(entry);
-            else if (entry.getValue() > 0.01) creditors.add(entry);
+            if (entry.getValue() < -0.01)
+                debtors.add(entry);
+            else if (entry.getValue() > 0.01)
+                creditors.add(entry);
         }
 
         List<SimplifiedDebtDto> simplifiedDebts = new ArrayList<>();
@@ -65,23 +68,28 @@ public class SettlementService {
             double credit = creditorEntry.getValue();
             double settleAmount = Math.min(debt, credit);
 
-            User debtorUser = userRepo.findById(debtorEntry.getKey()).orElse(null);
-            User creditorUser = userRepo.findById(creditorEntry.getKey()).orElse(null);
+            User debtorUser = userMap.get(debtorEntry.getKey());
+            User creditorUser = userMap.get(creditorEntry.getKey());
 
             if (debtorUser != null && creditorUser != null) {
                 SimplifiedDebtDto dto = new SimplifiedDebtDto(
                         new MemberDto(debtorUser.getId(), debtorUser.getUsername()),
                         new MemberDto(creditorUser.getId(), creditorUser.getUsername()),
-                        settleAmount
-                );
+                        settleAmount);
                 simplifiedDebts.add(dto);
             }
 
             double remainingDebt = debt - settleAmount;
             double remainingCredit = credit - settleAmount;
 
-            if (remainingCredit > 0.01) { creditorEntry.setValue(remainingCredit); creditors.add(creditorEntry); }
-            if (remainingDebt > 0.01) { debtorEntry.setValue(-remainingDebt); debtors.add(debtorEntry); }
+            if (remainingCredit > 0.01) {
+                creditorEntry.setValue(remainingCredit);
+                creditors.add(creditorEntry);
+            }
+            if (remainingDebt > 0.01) {
+                debtorEntry.setValue(-remainingDebt);
+                debtors.add(debtorEntry);
+            }
         }
 
         return simplifiedDebts;
@@ -101,21 +109,24 @@ public class SettlementService {
             }
         }
 
-        PriorityQueue<Map.Entry<Long, Double>> debtors   = new PriorityQueue<>(Map.Entry.comparingByValue());
-        PriorityQueue<Map.Entry<Long, Double>> creditors = new PriorityQueue<>((a, b) -> Double.compare(b.getValue(), a.getValue()));
+        PriorityQueue<Map.Entry<Long, Double>> debtors = new PriorityQueue<>(Map.Entry.comparingByValue());
+        PriorityQueue<Map.Entry<Long, Double>> creditors = new PriorityQueue<>(
+                (a, b) -> Double.compare(b.getValue(), a.getValue()));
 
         for (Map.Entry<Long, Double> entry : balances.entrySet()) {
-            if (entry.getValue() < -0.01)      debtors.add(entry);
-            else if (entry.getValue() > 0.01)  creditors.add(entry);
+            if (entry.getValue() < -0.01)
+                debtors.add(entry);
+            else if (entry.getValue() > 0.01)
+                creditors.add(entry);
         }
 
         List<SettlementTransaction> transactions = new ArrayList<>();
 
         while (!debtors.isEmpty() && !creditors.isEmpty()) {
-            var debtor   = debtors.poll();
+            var debtor = debtors.poll();
             var creditor = creditors.poll();
 
-            double debt   = Math.abs(debtor.getValue());
+            double debt = Math.abs(debtor.getValue());
             double credit = creditor.getValue();
             double settleAmount = Math.min(debt, credit);
 
@@ -125,11 +136,17 @@ public class SettlementService {
             st.setAmount(settleAmount);
             transactions.add(st);
 
-            double remainingDebt   = debt   - settleAmount;
+            double remainingDebt = debt - settleAmount;
             double remainingCredit = credit - settleAmount;
 
-            if (remainingCredit > 0.01) { creditor.setValue(remainingCredit); creditors.add(creditor); }
-            if (remainingDebt   > 0.01) { debtor.setValue(-remainingDebt);    debtors.add(debtor); }
+            if (remainingCredit > 0.01) {
+                creditor.setValue(remainingCredit);
+                creditors.add(creditor);
+            }
+            if (remainingDebt > 0.01) {
+                debtor.setValue(-remainingDebt);
+                debtors.add(debtor);
+            }
         }
         return transactions;
     }
