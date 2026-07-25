@@ -17,7 +17,7 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long> {
     @Query("SELECT s.user.id as userId, " +
            "(SUM(CASE WHEN e.paidBy.id = s.user.id THEN e.amount ELSE 0 END) - SUM(s.amountOwed)) as netBalance " +
            "FROM Expense e JOIN ExpenseSplit s ON e.id = s.expense.id " +
-           "WHERE e.groupId = :groupId GROUP BY s.user.id")
+           "WHERE e.group.Id = :groupId GROUP BY s.user.id")
     List<UserBalanceProjection> getGroupNetBalances(@Param("groupId") Long groupId);
 
 
